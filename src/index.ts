@@ -10,6 +10,7 @@ import topicsRoutes from "./routes/topics.js";
 import outletTopicArticlesRoutes from "./routes/outlet-topic-articles.js";
 import journalistArticlesRoutes from "./routes/journalist-articles.js";
 import internalRoutes from "./routes/internal.js";
+import { requireIdentity } from "./middleware/identity.js";
 import { db } from "./db/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -31,7 +32,11 @@ app.get("/openapi.json", async (_req, res) => {
   }
 });
 
+// Routes exempt from identity headers
 app.use(healthRoutes);
+
+// All routes below require x-org-id and x-user-id headers
+app.use(requireIdentity);
 app.use(articlesRoutes);
 app.use(topicsRoutes);
 app.use(outletTopicArticlesRoutes);

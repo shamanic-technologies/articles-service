@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import request from "supertest";
-import { createTestApp, getAuthHeaders } from "../helpers/test-app.js";
+import { createTestApp, getAuthHeaders, getIdentityHeaders } from "../helpers/test-app.js";
 import { cleanTestData, insertTestArticle, insertTestTopic, closeDb } from "../helpers/test-db.js";
 import { db } from "../../src/db/index.js";
 import { searchedJournalistArticles } from "../../src/db/schema.js";
@@ -81,7 +81,9 @@ describe("Outlet-Topic-Articles", () => {
       .set(getAuthHeaders())
       .send({ outletId, topicId: topic.id, articleId: article.id });
 
-    const res = await request(app).get(`/v1/outlet-topic-articles?outletId=${outletId}`);
+    const res = await request(app)
+      .get(`/v1/outlet-topic-articles?outletId=${outletId}`)
+      .set(getIdentityHeaders());
     expect(res.status).toBe(200);
     expect(res.body.links).toHaveLength(1);
   });
@@ -97,7 +99,9 @@ describe("Outlet-Topic-Articles", () => {
       .set(getAuthHeaders())
       .send({ outletId, topicId: topic.id, articleId: a1.id });
 
-    const res = await request(app).get(`/v1/articles?outletId=${outletId}`);
+    const res = await request(app)
+      .get(`/v1/articles?outletId=${outletId}`)
+      .set(getIdentityHeaders());
     expect(res.status).toBe(200);
     expect(res.body.articles).toHaveLength(1);
     expect(res.body.articles[0].ogTitle).toBe("Linked");
@@ -128,7 +132,9 @@ describe("Journalist-Articles", () => {
       journalistId,
     });
 
-    const res = await request(app).get(`/v1/journalist-articles/${journalistId}`);
+    const res = await request(app)
+      .get(`/v1/journalist-articles/${journalistId}`)
+      .set(getIdentityHeaders());
     expect(res.status).toBe(200);
     expect(res.body.articles).toHaveLength(1);
     expect(res.body.articles[0].ogTitle).toBe("Test");
@@ -147,7 +153,9 @@ describe("Journalist-Articles", () => {
       journalistId,
     });
 
-    const res = await request(app).get(`/v1/articles/by-journalist/${journalistId}`);
+    const res = await request(app)
+      .get(`/v1/articles/by-journalist/${journalistId}`)
+      .set(getIdentityHeaders());
     expect(res.status).toBe(200);
     expect(res.body.articles).toHaveLength(1);
     expect(res.body.articles[0].computedTitle).toBe("Journalist Article");

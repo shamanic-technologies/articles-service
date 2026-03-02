@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import request from "supertest";
-import { createTestApp, getAuthHeaders } from "../helpers/test-app.js";
+import { createTestApp, getAuthHeaders, getIdentityHeaders } from "../helpers/test-app.js";
 import { cleanTestData, insertTestTopic, closeDb } from "../helpers/test-db.js";
 
 const app = createTestApp();
@@ -44,6 +44,7 @@ describe("POST /v1/topics", () => {
   it("returns 401 without API key", async () => {
     const res = await request(app)
       .post("/v1/topics")
+      .set(getIdentityHeaders())
       .send({ topicName: "Technology" });
 
     expect(res.status).toBe(401);
@@ -64,7 +65,7 @@ describe("GET /v1/topics", () => {
     await insertTestTopic("Technology");
     await insertTestTopic("Science");
 
-    const res = await request(app).get("/v1/topics");
+    const res = await request(app).get("/v1/topics").set(getIdentityHeaders());
     expect(res.status).toBe(200);
     expect(res.body.topics).toHaveLength(2);
   });
