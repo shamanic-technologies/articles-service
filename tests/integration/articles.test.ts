@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import request from "supertest";
-import { createTestApp, getAuthHeaders } from "../helpers/test-app.js";
+import { createTestApp, getAuthHeaders, getIdentityHeaders } from "../helpers/test-app.js";
 import { cleanTestData, insertTestArticle, closeDb } from "../helpers/test-db.js";
 
 const app = createTestApp();
@@ -45,9 +45,20 @@ describe("POST /v1/articles", () => {
   it("returns 401 without API key", async () => {
     const res = await request(app)
       .post("/v1/articles")
+      .set(getIdentityHeaders())
       .send({ articleUrl: "https://example.com/article-1" });
 
     expect(res.status).toBe(401);
+  });
+
+  it("returns 400 without identity headers", async () => {
+    const res = await request(app)
+      .post("/v1/articles")
+      .set({ "X-API-Key": "test-api-key", "Content-Type": "application/json" })
+      .send({ articleUrl: "https://example.com/article-1" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("identity headers");
   });
 
   it("returns 400 for invalid body", async () => {
@@ -65,7 +76,7 @@ describe("GET /v1/articles", () => {
     await insertTestArticle({ articleUrl: "https://example.com/1", ogTitle: "Article 1" });
     await insertTestArticle({ articleUrl: "https://example.com/2", ogTitle: "Article 2" });
 
-    const res = await request(app).get("/v1/articles");
+    const res = await request(app).get("/v1/articles").set(getIdentityHeaders());
     expect(res.status).toBe(200);
     expect(res.body.articles).toHaveLength(2);
   });
@@ -75,9 +86,14 @@ describe("GET /v1/articles", () => {
     await insertTestArticle({ articleUrl: "https://example.com/2" });
     await insertTestArticle({ articleUrl: "https://example.com/3" });
 
-    const res = await request(app).get("/v1/articles?limit=2&offset=1");
+    const res = await request(app).get("/v1/articles?limit=2&offset=1").set(getIdentityHeaders());
     expect(res.status).toBe(200);
     expect(res.body.articles).toHaveLength(2);
+  });
+
+  it("returns 400 without identity headers", async () => {
+    const res = await request(app).get("/v1/articles");
+    expect(res.status).toBe(400);
   });
 });
 
@@ -85,13 +101,15 @@ describe("GET /v1/articles/:id", () => {
   it("returns a single article", async () => {
     const article = await insertTestArticle({ articleUrl: "https://example.com/1", ogTitle: "Test" });
 
-    const res = await request(app).get(`/v1/articles/${article.id}`);
+    const res = await request(app).get(`/v1/articles/${article.id}`).set(getIdentityHeaders());
     expect(res.status).toBe(200);
     expect(res.body.ogTitle).toBe("Test");
   });
 
   it("returns 404 for unknown ID", async () => {
-    const res = await request(app).get("/v1/articles/550e8400-e29b-41d4-a716-446655440000");
+    const res = await request(app)
+      .get("/v1/articles/550e8400-e29b-41d4-a716-446655440000")
+      .set(getIdentityHeaders());
     expect(res.status).toBe(404);
   });
 });
@@ -137,7 +155,7 @@ describe("GET /v1/articles/authors", () => {
       articlePublished: "2024-01-15T10:00:00Z",
     });
 
-    const res = await request(app).get("/v1/articles/authors");
+    const res = await request(app).get("/v1/articles/authors").set(getIdentityHeaders());
     expect(res.status).toBe(200);
     expect(res.body.articles).toHaveLength(1);
 
@@ -164,7 +182,7 @@ describe("POST /v1/articles/search", () => {
 
     const res = await request(app)
       .post("/v1/articles/search")
-      .set({ "Content-Type": "application/json" })
+      .set({ "Content-Type": "application/json", ...getIdentityHeaders() })
       .send({ query: "technology" });
 
     expect(res.status).toBe(200);
@@ -175,7 +193,7 @@ describe("POST /v1/articles/search", () => {
   it("returns 400 without query", async () => {
     const res = await request(app)
       .post("/v1/articles/search")
-      .set({ "Content-Type": "application/json" })
+      .set({ "Content-Type": "application/json", ...getIdentityHeaders() })
       .send({});
 
     expect(res.status).toBe(400);

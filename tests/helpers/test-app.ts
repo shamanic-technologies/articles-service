@@ -9,10 +9,14 @@ import topicsRoutes from "../../src/routes/topics.js";
 import outletTopicArticlesRoutes from "../../src/routes/outlet-topic-articles.js";
 import journalistArticlesRoutes from "../../src/routes/journalist-articles.js";
 import internalRoutes from "../../src/routes/internal.js";
+import { requireIdentity } from "../../src/middleware/identity.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const openapiPath = path.resolve(__dirname, "../../openapi.json");
+
+export const TEST_ORG_ID = "a0000000-0000-0000-0000-000000000001";
+export const TEST_USER_ID = "b0000000-0000-0000-0000-000000000001";
 
 export function createTestApp() {
   const app = express();
@@ -26,6 +30,7 @@ export function createTestApp() {
     }
   });
   app.use(healthRoutes);
+  app.use(requireIdentity);
   app.use(articlesRoutes);
   app.use(topicsRoutes);
   app.use(outletTopicArticlesRoutes);
@@ -37,9 +42,18 @@ export function createTestApp() {
   return app;
 }
 
+export function getIdentityHeaders() {
+  return {
+    "x-org-id": TEST_ORG_ID,
+    "x-user-id": TEST_USER_ID,
+  };
+}
+
 export function getAuthHeaders() {
   return {
     "X-API-Key": "test-api-key",
     "Content-Type": "application/json",
+    "x-org-id": TEST_ORG_ID,
+    "x-user-id": TEST_USER_ID,
   };
 }
