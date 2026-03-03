@@ -58,7 +58,7 @@ describe("POST /v1/articles", () => {
       .send({ articleUrl: "https://example.com/article-1" });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain("identity headers");
+    expect(res.body.error).toContain("Missing required headers");
   });
 
   it("returns 400 for invalid body", async () => {

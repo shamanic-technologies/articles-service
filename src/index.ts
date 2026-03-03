@@ -35,7 +35,7 @@ app.get("/openapi.json", async (_req, res) => {
 // Routes exempt from identity headers
 app.use(healthRoutes);
 
-// All routes below require x-org-id and x-user-id headers
+// All routes below require x-org-id, x-user-id, and x-run-id headers
 app.use(requireIdentity);
 app.use(articlesRoutes);
 app.use(topicsRoutes);
