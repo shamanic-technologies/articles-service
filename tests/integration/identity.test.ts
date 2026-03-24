@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
-import { createTestApp, TEST_ORG_ID, TEST_USER_ID, TEST_RUN_ID } from "../helpers/test-app.js";
+import { createTestApp, TEST_ORG_ID, TEST_USER_ID, TEST_RUN_ID, TEST_FEATURE_SLUG } from "../helpers/test-app.js";
 
 const app = createTestApp();
 
@@ -78,5 +78,27 @@ describe("Identity middleware", () => {
     // Should not be 400 — the identity middleware accepted the headers.
     // May be 200 (with DB) or 500 (without DB) depending on test environment.
     expect(res.status).not.toBe(400);
+  });
+
+  it("passes through with valid identity headers including x-feature-slug", async () => {
+    const res = await request(app)
+      .get("/v1/articles")
+      .set({ "x-org-id": TEST_ORG_ID, "x-user-id": TEST_USER_ID, "x-run-id": TEST_RUN_ID, "x-feature-slug": TEST_FEATURE_SLUG });
+    expect(res.status).not.toBe(400);
+  });
+
+  it("passes through without x-feature-slug (it is optional)", async () => {
+    const res = await request(app)
+      .get("/v1/articles")
+      .set({ "x-org-id": TEST_ORG_ID, "x-user-id": TEST_USER_ID, "x-run-id": TEST_RUN_ID });
+    expect(res.status).not.toBe(400);
+  });
+
+  it("returns 400 when x-feature-slug is empty string", async () => {
+    const res = await request(app)
+      .get("/v1/articles")
+      .set({ "x-org-id": TEST_ORG_ID, "x-user-id": TEST_USER_ID, "x-run-id": TEST_RUN_ID, "x-feature-slug": "" });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("x-feature-slug");
   });
 });

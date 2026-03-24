@@ -151,6 +151,15 @@ export const SearchArticlesBodySchema = z
   })
   .openapi("SearchArticlesBody");
 
+// --- Shared header parameters ---
+
+export const IdentityHeadersSchema = z.object({
+  "x-org-id": z.string().uuid().openapi({ description: "Internal org UUID" }),
+  "x-user-id": z.string().uuid().openapi({ description: "Internal user UUID" }),
+  "x-run-id": z.string().uuid().openapi({ description: "Run UUID from runs-service" }),
+  "x-feature-slug": z.string().optional().openapi({ description: "Feature slug for tracking/filtering" }),
+});
+
 // --- Register paths ---
 
 registry.registerPath({
@@ -173,7 +182,7 @@ registry.registerPath({
   path: "/v1/articles",
   operationId: "createArticle",
   summary: "Create or upsert an article by URL",
-  request: { body: { content: { "application/json": { schema: CreateArticleBodySchema } } } },
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: CreateArticleBodySchema } } } },
   responses: {
     200: { description: "Article upserted", content: { "application/json": { schema: ArticleSchema } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
@@ -187,6 +196,7 @@ registry.registerPath({
   operationId: "listArticles",
   summary: "List articles with optional filters",
   request: {
+    headers: IdentityHeadersSchema,
     query: z.object({
       outletId: z.string().uuid().optional(),
       topicId: z.string().uuid().optional(),
@@ -206,7 +216,7 @@ registry.registerPath({
   path: "/v1/articles/{id}",
   operationId: "getArticle",
   summary: "Get a single article by ID",
-  request: { params: z.object({ id: z.string().uuid() }) },
+  request: { headers: IdentityHeadersSchema, params: z.object({ id: z.string().uuid() }) },
   responses: {
     200: { description: "Article found", content: { "application/json": { schema: ArticleSchema } } },
     404: { description: "Article not found", content: { "application/json": { schema: ErrorResponseSchema } } },
@@ -219,7 +229,7 @@ registry.registerPath({
   path: "/v1/articles/bulk",
   operationId: "bulkCreateArticles",
   summary: "Bulk upsert articles",
-  request: { body: { content: { "application/json": { schema: BulkCreateArticlesBodySchema } } } },
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: BulkCreateArticlesBodySchema } } } },
   responses: {
     200: { description: "Articles upserted", content: { "application/json": { schema: z.object({ articles: z.array(ArticleSchema) }) } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
@@ -234,7 +244,7 @@ registry.registerPath({
   path: "/v1/topics",
   operationId: "createTopic",
   summary: "Create or upsert a topic by name",
-  request: { body: { content: { "application/json": { schema: CreateTopicBodySchema } } } },
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: CreateTopicBodySchema } } } },
   responses: {
     200: { description: "Topic upserted", content: { "application/json": { schema: TopicSchema } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
@@ -247,6 +257,7 @@ registry.registerPath({
   path: "/v1/topics",
   operationId: "listTopics",
   summary: "List all topics",
+  request: { headers: IdentityHeadersSchema },
   responses: {
     200: { description: "List of topics", content: { "application/json": { schema: z.object({ topics: z.array(TopicSchema) }) } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
@@ -258,7 +269,7 @@ registry.registerPath({
   path: "/v1/topics/bulk",
   operationId: "bulkCreateTopics",
   summary: "Bulk upsert topics",
-  request: { body: { content: { "application/json": { schema: BulkCreateTopicsBodySchema } } } },
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: BulkCreateTopicsBodySchema } } } },
   responses: {
     200: { description: "Topics upserted", content: { "application/json": { schema: z.object({ topics: z.array(TopicSchema) }) } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
@@ -273,7 +284,7 @@ registry.registerPath({
   path: "/v1/outlet-topic-articles",
   operationId: "createOutletTopicArticle",
   summary: "Link an article to an outlet and topic",
-  request: { body: { content: { "application/json": { schema: CreateOutletTopicArticleBodySchema } } } },
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: CreateOutletTopicArticleBodySchema } } } },
   responses: {
     200: { description: "Link created", content: { "application/json": { schema: OutletTopicArticleSchema } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
@@ -286,7 +297,7 @@ registry.registerPath({
   path: "/v1/outlet-topic-articles/bulk",
   operationId: "bulkCreateOutletTopicArticles",
   summary: "Bulk link articles to outlets and topics",
-  request: { body: { content: { "application/json": { schema: BulkCreateOutletTopicArticlesBodySchema } } } },
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: BulkCreateOutletTopicArticlesBodySchema } } } },
   responses: {
     200: { description: "Links created", content: { "application/json": { schema: z.object({ links: z.array(OutletTopicArticleSchema) }) } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
@@ -300,6 +311,7 @@ registry.registerPath({
   operationId: "listOutletTopicArticles",
   summary: "List outlet-topic-article links",
   request: {
+    headers: IdentityHeadersSchema,
     query: z.object({
       outletId: z.string().uuid().optional(),
       topicId: z.string().uuid().optional(),
@@ -318,7 +330,7 @@ registry.registerPath({
   path: "/v1/journalist-articles",
   operationId: "createJournalistArticle",
   summary: "Link an article to a journalist",
-  request: { body: { content: { "application/json": { schema: CreateJournalistArticleBodySchema } } } },
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: CreateJournalistArticleBodySchema } } } },
   responses: {
     200: { description: "Link created", content: { "application/json": { schema: JournalistArticleSchema } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
@@ -331,7 +343,7 @@ registry.registerPath({
   path: "/v1/journalist-articles/{journalistId}",
   operationId: "getJournalistArticles",
   summary: "Get articles linked to a journalist",
-  request: { params: z.object({ journalistId: z.string().uuid() }) },
+  request: { headers: IdentityHeadersSchema, params: z.object({ journalistId: z.string().uuid() }) },
   responses: {
     200: { description: "List of articles", content: { "application/json": { schema: z.object({ articles: z.array(ArticleSchema) }) } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
@@ -346,6 +358,7 @@ registry.registerPath({
   operationId: "getArticlesWithAuthors",
   summary: "Articles with computed authors (v_articles_authors)",
   request: {
+    headers: IdentityHeadersSchema,
     query: z.object({
       limit: z.coerce.number().int().min(1).max(100).optional(),
       offset: z.coerce.number().int().min(0).optional(),
@@ -362,7 +375,7 @@ registry.registerPath({
   path: "/v1/articles/by-journalist/{journalistId}",
   operationId: "getArticlesByJournalist",
   summary: "Articles for a journalist (for AI relevance analysis)",
-  request: { params: z.object({ journalistId: z.string().uuid() }) },
+  request: { headers: IdentityHeadersSchema, params: z.object({ journalistId: z.string().uuid() }) },
   responses: {
     200: { description: "Articles for journalist", content: { "application/json": { schema: z.object({ articles: z.array(ArticleAuthorViewSchema) }) } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
@@ -374,7 +387,7 @@ registry.registerPath({
   path: "/v1/articles/by-journalist-outlet/{journalistId}/{outletId}",
   operationId: "getArticlesByJournalistOutlet",
   summary: "Articles by a journalist at a specific outlet",
-  request: { params: z.object({ journalistId: z.string().uuid(), outletId: z.string().uuid() }) },
+  request: { headers: IdentityHeadersSchema, params: z.object({ journalistId: z.string().uuid(), outletId: z.string().uuid() }) },
   responses: {
     200: { description: "Articles for journalist at outlet", content: { "application/json": { schema: z.object({ articles: z.array(ArticleAuthorViewSchema) }) } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
@@ -388,7 +401,7 @@ registry.registerPath({
   path: "/v1/articles/search",
   operationId: "searchArticles",
   summary: "Full-text search across article fields",
-  request: { body: { content: { "application/json": { schema: SearchArticlesBodySchema } } } },
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: SearchArticlesBodySchema } } } },
   responses: {
     200: { description: "Search results", content: { "application/json": { schema: z.object({ articles: z.array(ArticleSchema) }) } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
@@ -404,6 +417,7 @@ registry.registerPath({
   operationId: "getArticlesByUrls",
   summary: "Batch lookup articles by URLs",
   request: {
+    headers: IdentityHeadersSchema,
     query: z.object({ urls: z.string().describe("Comma-separated list of URLs") }),
   },
   responses: {
@@ -417,7 +431,7 @@ registry.registerPath({
   path: "/internal/articles/by-outlet-topic/{outletId}/{topicId}",
   operationId: "getArticlesByOutletTopic",
   summary: "Articles for an outlet+topic combo",
-  request: { params: z.object({ outletId: z.string().uuid(), topicId: z.string().uuid() }) },
+  request: { headers: IdentityHeadersSchema, params: z.object({ outletId: z.string().uuid(), topicId: z.string().uuid() }) },
   responses: {
     200: { description: "Articles found", content: { "application/json": { schema: z.object({ articles: z.array(ArticleSchema) }) } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },

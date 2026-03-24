@@ -18,6 +18,7 @@ const openapiPath = path.resolve(__dirname, "../../openapi.json");
 export const TEST_ORG_ID = "a0000000-0000-0000-0000-000000000001";
 export const TEST_USER_ID = "b0000000-0000-0000-0000-000000000001";
 export const TEST_RUN_ID = "c0000000-0000-0000-0000-000000000001";
+export const TEST_FEATURE_SLUG = "test-feature";
 
 export function createTestApp() {
   const app = express();
@@ -48,6 +49,7 @@ export function getIdentityHeaders() {
     "x-org-id": TEST_ORG_ID,
     "x-user-id": TEST_USER_ID,
     "x-run-id": TEST_RUN_ID,
+    "x-feature-slug": TEST_FEATURE_SLUG,
   };
 }
 
@@ -58,5 +60,6 @@ export function getAuthHeaders() {
     "x-org-id": TEST_ORG_ID,
     "x-user-id": TEST_USER_ID,
     "x-run-id": TEST_RUN_ID,
+    "x-feature-slug": TEST_FEATURE_SLUG,
   };
 }
