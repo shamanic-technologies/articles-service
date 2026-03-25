@@ -46,14 +46,12 @@ describe("POST /v1/discover/outlet-articles", () => {
         success: true,
         authors: [{ firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-20T00:00:00Z",
-        rawMarkdown: "Article content about AI startup...",
       },
       {
         url: "https://techcrunch.com/2025/article-2",
         success: true,
         authors: [{ firstName: "John", lastName: "Doe" }, { firstName: "Jane", lastName: "Smith" }],
         publishedAt: "2025-03-18T00:00:00Z",
-        rawMarkdown: "Article about product launch...",
       },
     ]);
 
@@ -109,7 +107,6 @@ describe("POST /v1/discover/outlet-articles", () => {
         success: true,
         authors: [{ firstName: "Alice", lastName: "Johnson" }],
         publishedAt: "2025-03-20T00:00:00Z",
-        rawMarkdown: "Good article content",
       },
       {
         url: "https://example.com/bad",
@@ -176,14 +173,12 @@ describe("POST /v1/discover/journalist-publications", () => {
         success: true,
         authors: [{ firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-15T00:00:00Z",
-        rawMarkdown: "Tech trends article...",
       },
       {
         url: "https://nytimes.com/ai-revolution",
         success: true,
         authors: [{ firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-10T00:00:00Z",
-        rawMarkdown: "AI revolution article...",
       },
     ]);
 
@@ -266,7 +261,6 @@ describe("POST /v1/discover/journalist-publications", () => {
         success: true,
         authors: [{ firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-20T00:00:00Z",
-        rawMarkdown: "Content...",
       },
     ]);
 
