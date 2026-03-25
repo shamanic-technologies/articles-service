@@ -68,7 +68,7 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
         articleUrl: ext.url,
         ogTitle: news?.title ?? null,
         snippet: news?.snippet ?? null,
-        ogDescription: ext.rawMarkdown?.slice(0, 2000) ?? null,
+        ogDescription: null,
         articlePublished: ext.publishedAt ?? null,
         author: ext.authors.map((a) => `${a.firstName} ${a.lastName}`).join(", ") || null,
       };
@@ -165,7 +165,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
         articleUrl: ext.url,
         ogTitle: news?.title ?? null,
         snippet: news?.snippet ?? null,
-        ogDescription: ext.rawMarkdown?.slice(0, 2000) ?? null,
+        ogDescription: null,
         articlePublished: ext.publishedAt ?? null,
         author: ext.authors.map((a) => `${a.firstName} ${a.lastName}`).join(", ") || null,
       };

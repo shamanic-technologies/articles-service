@@ -8,7 +8,6 @@ export interface ExtractResultSuccess {
   success: true;
   authors: ExtractAuthor[];
   publishedAt: string | null;
-  rawMarkdown: string | null;
 }
 
 interface ExtractResultError {
@@ -21,6 +20,7 @@ export type ExtractResult = ExtractResultSuccess | ExtractResultError;
 
 interface ExtractResponse {
   results: ExtractResult[];
+  tokensUsed?: number;
   runId?: string;
 }
 
