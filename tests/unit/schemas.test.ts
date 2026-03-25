@@ -7,6 +7,8 @@ import {
   CreateOutletTopicArticleBodySchema,
   CreateJournalistArticleBodySchema,
   SearchArticlesBodySchema,
+  DiscoverOutletArticlesBodySchema,
+  DiscoverJournalistPublicationsBodySchema,
 } from "../../src/schemas.js";
 
 describe("CreateArticleBodySchema", () => {
@@ -139,6 +141,85 @@ describe("SearchArticlesBodySchema", () => {
 
   it("rejects an empty query", () => {
     const result = SearchArticlesBodySchema.safeParse({ query: "" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("DiscoverOutletArticlesBodySchema", () => {
+  it("validates with just outletDomain", () => {
+    const result = DiscoverOutletArticlesBodySchema.safeParse({
+      outletDomain: "techcrunch.com",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.maxArticles).toBe(10);
+    }
+  });
+
+  it("validates with custom maxArticles", () => {
+    const result = DiscoverOutletArticlesBodySchema.safeParse({
+      outletDomain: "wired.com",
+      maxArticles: 5,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects missing outletDomain", () => {
+    const result = DiscoverOutletArticlesBodySchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty outletDomain", () => {
+    const result = DiscoverOutletArticlesBodySchema.safeParse({ outletDomain: "" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects maxArticles > 20", () => {
+    const result = DiscoverOutletArticlesBodySchema.safeParse({
+      outletDomain: "example.com",
+      maxArticles: 25,
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("DiscoverJournalistPublicationsBodySchema", () => {
+  it("validates with required fields", () => {
+    const result = DiscoverJournalistPublicationsBodySchema.safeParse({
+      journalistFirstName: "Sarah",
+      journalistLastName: "Perez",
+      journalistId: "550e8400-e29b-41d4-a716-446655440000",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.maxResults).toBe(10);
+    }
+  });
+
+  it("validates with custom maxResults", () => {
+    const result = DiscoverJournalistPublicationsBodySchema.safeParse({
+      journalistFirstName: "Sarah",
+      journalistLastName: "Perez",
+      journalistId: "550e8400-e29b-41d4-a716-446655440000",
+      maxResults: 5,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects missing journalistLastName", () => {
+    const result = DiscoverJournalistPublicationsBodySchema.safeParse({
+      journalistFirstName: "Sarah",
+      journalistId: "550e8400-e29b-41d4-a716-446655440000",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects invalid journalistId", () => {
+    const result = DiscoverJournalistPublicationsBodySchema.safeParse({
+      journalistFirstName: "Sarah",
+      journalistLastName: "Perez",
+      journalistId: "not-a-uuid",
+    });
     expect(result.success).toBe(false);
   });
 });

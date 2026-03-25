@@ -10,6 +10,7 @@ import topicsRoutes from "./routes/topics.js";
 import outletTopicArticlesRoutes from "./routes/outlet-topic-articles.js";
 import journalistArticlesRoutes from "./routes/journalist-articles.js";
 import internalRoutes from "./routes/internal.js";
+import discoverRoutes from "./routes/discover.js";
 import { requireIdentity } from "./middleware/identity.js";
 import { db } from "./db/index.js";
 
@@ -41,6 +42,7 @@ app.use(articlesRoutes);
 app.use(topicsRoutes);
 app.use(outletTopicArticlesRoutes);
 app.use(journalistArticlesRoutes);
+app.use(discoverRoutes);
 app.use(internalRoutes);
 
 app.use((_req, res) => {
