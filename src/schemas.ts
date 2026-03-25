@@ -151,6 +151,42 @@ export const SearchArticlesBodySchema = z
   })
   .openapi("SearchArticlesBody");
 
+// --- Discovery schemas ---
+
+export const DiscoverOutletArticlesBodySchema = z
+  .object({
+    outletDomain: z.string().min(1).openapi({ description: "Domain of the outlet (e.g. techcrunch.com)", example: "techcrunch.com" }),
+    maxArticles: z.number().int().min(1).max(20).optional().default(10).openapi({ description: "Max articles to discover (default 10)" }),
+  })
+  .openapi("DiscoverOutletArticlesBody");
+
+export const DiscoverJournalistPublicationsBodySchema = z
+  .object({
+    journalistFirstName: z.string().min(1).openapi({ description: "Journalist first name" }),
+    journalistLastName: z.string().min(1).openapi({ description: "Journalist last name" }),
+    journalistId: z.string().uuid().openapi({ description: "Journalist UUID for linking" }),
+    maxResults: z.number().int().min(1).max(20).optional().default(10).openapi({ description: "Max publications to find (default 10)" }),
+  })
+  .openapi("DiscoverJournalistPublicationsBody");
+
+export const ExtractedAuthorSchema = z
+  .object({
+    firstName: z.string(),
+    lastName: z.string(),
+  })
+  .openapi("ExtractedAuthor");
+
+export const DiscoveredArticleSchema = z
+  .object({
+    articleId: z.string().uuid(),
+    articleUrl: z.string(),
+    title: z.string().nullable(),
+    snippet: z.string().nullable(),
+    authors: z.array(ExtractedAuthorSchema),
+    publishedAt: z.string().nullable(),
+  })
+  .openapi("DiscoveredArticle");
+
 // --- Shared header parameters ---
 
 export const IdentityHeadersSchema = z.object({
@@ -435,6 +471,34 @@ registry.registerPath({
   responses: {
     200: { description: "Articles found", content: { "application/json": { schema: z.object({ articles: z.array(ArticleSchema) }) } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
+  },
+});
+
+// Discovery endpoints
+
+registry.registerPath({
+  method: "post",
+  path: "/v1/discover/outlet-articles",
+  operationId: "discoverOutletArticles",
+  summary: "Discover recent articles from an outlet via Google News + Firecrawl extraction",
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: DiscoverOutletArticlesBodySchema } } } },
+  responses: {
+    200: { description: "Discovered articles with extracted authors", content: { "application/json": { schema: z.object({ articles: z.array(DiscoveredArticleSchema) }) } } },
+    400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
+    502: { description: "Upstream service error", content: { "application/json": { schema: ErrorResponseSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/v1/discover/journalist-publications",
+  operationId: "discoverJournalistPublications",
+  summary: "Discover recent publications by a journalist across the web",
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: DiscoverJournalistPublicationsBodySchema } } } },
+  responses: {
+    200: { description: "Journalist publications with extracted authors", content: { "application/json": { schema: z.object({ articles: z.array(DiscoveredArticleSchema) }) } } },
+    400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
+    502: { description: "Upstream service error", content: { "application/json": { schema: ErrorResponseSchema } } },
   },
 });
 

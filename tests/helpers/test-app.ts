@@ -9,6 +9,7 @@ import topicsRoutes from "../../src/routes/topics.js";
 import outletTopicArticlesRoutes from "../../src/routes/outlet-topic-articles.js";
 import journalistArticlesRoutes from "../../src/routes/journalist-articles.js";
 import internalRoutes from "../../src/routes/internal.js";
+import discoverRoutes from "../../src/routes/discover.js";
 import { requireIdentity } from "../../src/middleware/identity.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -37,6 +38,7 @@ export function createTestApp() {
   app.use(topicsRoutes);
   app.use(outletTopicArticlesRoutes);
   app.use(journalistArticlesRoutes);
+  app.use(discoverRoutes);
   app.use(internalRoutes);
   app.use((_req: express.Request, res: express.Response) => {
     res.status(404).json({ error: "Not found" });
