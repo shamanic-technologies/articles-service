@@ -26,7 +26,7 @@ interface ExtractResponse {
 
 export async function extractArticles(
   urls: string[],
-  headers: { orgId: string; userId: string; runId: string; featureSlug?: string },
+  headers: { orgId: string; userId: string; runId: string; featureSlug?: string; campaignId?: string },
 ): Promise<ExtractResult[]> {
   const baseUrl = process.env.SCRAPING_SERVICE_URL;
   const apiKey = process.env.SCRAPING_SERVICE_API_KEY;
@@ -43,6 +43,7 @@ export async function extractArticles(
       "x-user-id": headers.userId,
       "x-run-id": headers.runId,
       ...(headers.featureSlug ? { "x-feature-slug": headers.featureSlug } : {}),
+      ...(headers.campaignId ? { "x-campaign-id": headers.campaignId } : {}),
     },
     body: JSON.stringify({ urls }),
   });
