@@ -61,22 +61,20 @@ export const TopicSchema = z
   })
   .openapi("Topic");
 
-export const OutletTopicArticleSchema = z
+export const ArticleDiscoverySchema = z
   .object({
-    outletId: z.string().uuid(),
-    topicId: z.string().uuid(),
+    id: z.string().uuid(),
     articleId: z.string().uuid(),
+    orgId: z.string().uuid(),
+    brandId: z.string().uuid(),
+    featureSlug: z.string(),
+    campaignId: z.string().uuid(),
+    outletId: z.string().uuid().nullable(),
+    journalistId: z.string().uuid().nullable(),
+    topicId: z.string().uuid().nullable(),
     createdAt: z.string().datetime(),
-    updatedAt: z.string().datetime(),
   })
-  .openapi("OutletTopicArticle");
-
-export const JournalistArticleSchema = z
-  .object({
-    articleId: z.string().uuid(),
-    journalistId: z.string().uuid(),
-  })
-  .openapi("JournalistArticle");
+  .openapi("ArticleDiscovery");
 
 export const ArticleAuthorViewSchema = z
   .object({
@@ -124,24 +122,20 @@ export const BulkCreateTopicsBodySchema = z
   .object({ topics: z.array(CreateTopicBodySchema) })
   .openapi("BulkCreateTopicsBody");
 
-export const CreateOutletTopicArticleBodySchema = z
-  .object({
-    outletId: z.string().uuid(),
-    topicId: z.string().uuid(),
-    articleId: z.string().uuid(),
-  })
-  .openapi("CreateOutletTopicArticleBody");
-
-export const BulkCreateOutletTopicArticlesBodySchema = z
-  .object({ links: z.array(CreateOutletTopicArticleBodySchema) })
-  .openapi("BulkCreateOutletTopicArticlesBody");
-
-export const CreateJournalistArticleBodySchema = z
+export const CreateDiscoveryBodySchema = z
   .object({
     articleId: z.string().uuid(),
-    journalistId: z.string().uuid(),
+    brandId: z.string().uuid(),
+    campaignId: z.string().uuid(),
+    outletId: z.string().uuid().optional(),
+    journalistId: z.string().uuid().optional(),
+    topicId: z.string().uuid().optional(),
   })
-  .openapi("CreateJournalistArticleBody");
+  .openapi("CreateDiscoveryBody");
+
+export const BulkCreateDiscoveriesBodySchema = z
+  .object({ discoveries: z.array(CreateDiscoveryBodySchema) })
+  .openapi("BulkCreateDiscoveriesBody");
 
 export const SearchArticlesBodySchema = z
   .object({
@@ -156,6 +150,8 @@ export const SearchArticlesBodySchema = z
 export const DiscoverOutletArticlesBodySchema = z
   .object({
     outletDomain: z.string().min(1).openapi({ description: "Domain of the outlet (e.g. techcrunch.com)", example: "techcrunch.com" }),
+    brandId: z.string().uuid().openapi({ description: "Brand UUID for scoping the discovery" }),
+    campaignId: z.string().uuid().openapi({ description: "Campaign UUID for scoping the discovery" }),
     maxArticles: z.number().int().min(1).max(20).optional().default(10).openapi({ description: "Max articles to discover (default 10)" }),
   })
   .openapi("DiscoverOutletArticlesBody");
@@ -165,6 +161,8 @@ export const DiscoverJournalistPublicationsBodySchema = z
     journalistFirstName: z.string().min(1).openapi({ description: "Journalist first name" }),
     journalistLastName: z.string().min(1).openapi({ description: "Journalist last name" }),
     journalistId: z.string().uuid().openapi({ description: "Journalist UUID for linking" }),
+    brandId: z.string().uuid().openapi({ description: "Brand UUID for scoping the discovery" }),
+    campaignId: z.string().uuid().openapi({ description: "Campaign UUID for scoping the discovery" }),
     maxResults: z.number().int().min(1).max(20).optional().default(10).openapi({ description: "Max publications to find (default 10)" }),
   })
   .openapi("DiscoverJournalistPublicationsBody");
@@ -230,13 +228,10 @@ registry.registerPath({
   method: "get",
   path: "/v1/articles",
   operationId: "listArticles",
-  summary: "List articles with optional filters",
+  summary: "List articles with pagination",
   request: {
     headers: IdentityHeadersSchema,
     query: z.object({
-      outletId: z.string().uuid().optional(),
-      topicId: z.string().uuid().optional(),
-      journalistId: z.string().uuid().optional(),
       limit: z.coerce.number().int().min(1).max(100).optional(),
       offset: z.coerce.number().int().min(0).optional(),
     }),
@@ -313,16 +308,16 @@ registry.registerPath({
   },
 });
 
-// Outlet-Topic-Articles linking
+// Discoveries
 
 registry.registerPath({
   method: "post",
-  path: "/v1/outlet-topic-articles",
-  operationId: "createOutletTopicArticle",
-  summary: "Link an article to an outlet and topic",
-  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: CreateOutletTopicArticleBodySchema } } } },
+  path: "/v1/discoveries",
+  operationId: "createDiscovery",
+  summary: "Link an article to a campaign context (org/brand/feature/campaign)",
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: CreateDiscoveryBodySchema } } } },
   responses: {
-    200: { description: "Link created", content: { "application/json": { schema: OutletTopicArticleSchema } } },
+    200: { description: "Discovery created", content: { "application/json": { schema: ArticleDiscoverySchema } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
   },
@@ -330,12 +325,12 @@ registry.registerPath({
 
 registry.registerPath({
   method: "post",
-  path: "/v1/outlet-topic-articles/bulk",
-  operationId: "bulkCreateOutletTopicArticles",
-  summary: "Bulk link articles to outlets and topics",
-  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: BulkCreateOutletTopicArticlesBodySchema } } } },
+  path: "/v1/discoveries/bulk",
+  operationId: "bulkCreateDiscoveries",
+  summary: "Bulk link articles to campaign contexts",
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: BulkCreateDiscoveriesBodySchema } } } },
   responses: {
-    200: { description: "Links created", content: { "application/json": { schema: z.object({ links: z.array(OutletTopicArticleSchema) }) } } },
+    200: { description: "Discoveries created", content: { "application/json": { schema: z.object({ discoveries: z.array(ArticleDiscoverySchema) }) } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
   },
@@ -343,45 +338,35 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/v1/outlet-topic-articles",
-  operationId: "listOutletTopicArticles",
-  summary: "List outlet-topic-article links",
+  path: "/v1/discoveries",
+  operationId: "listDiscoveries",
+  summary: "List article discoveries with filters",
   request: {
     headers: IdentityHeadersSchema,
     query: z.object({
+      brandId: z.string().uuid().optional(),
+      campaignId: z.string().uuid().optional(),
       outletId: z.string().uuid().optional(),
+      journalistId: z.string().uuid().optional(),
       topicId: z.string().uuid().optional(),
+      limit: z.coerce.number().int().min(1).max(100).optional(),
+      offset: z.coerce.number().int().min(0).optional(),
     }),
   },
   responses: {
-    200: { description: "List of links", content: { "application/json": { schema: z.object({ links: z.array(OutletTopicArticleSchema) }) } } },
-    500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
-  },
-});
-
-// Journalist-Articles linking
-
-registry.registerPath({
-  method: "post",
-  path: "/v1/journalist-articles",
-  operationId: "createJournalistArticle",
-  summary: "Link an article to a journalist",
-  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: CreateJournalistArticleBodySchema } } } },
-  responses: {
-    200: { description: "Link created", content: { "application/json": { schema: JournalistArticleSchema } } },
-    400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
-    500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: "get",
-  path: "/v1/journalist-articles/{journalistId}",
-  operationId: "getJournalistArticles",
-  summary: "Get articles linked to a journalist",
-  request: { headers: IdentityHeadersSchema, params: z.object({ journalistId: z.string().uuid() }) },
-  responses: {
-    200: { description: "List of articles", content: { "application/json": { schema: z.object({ articles: z.array(ArticleSchema) }) } } },
+    200: {
+      description: "List of discoveries with article data",
+      content: {
+        "application/json": {
+          schema: z.object({
+            discoveries: z.array(z.object({
+              discovery: ArticleDiscoverySchema,
+              article: ArticleSchema,
+            })),
+          }),
+        },
+      },
+    },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
   },
 });
@@ -406,30 +391,6 @@ registry.registerPath({
   },
 });
 
-registry.registerPath({
-  method: "get",
-  path: "/v1/articles/by-journalist/{journalistId}",
-  operationId: "getArticlesByJournalist",
-  summary: "Articles for a journalist (for AI relevance analysis)",
-  request: { headers: IdentityHeadersSchema, params: z.object({ journalistId: z.string().uuid() }) },
-  responses: {
-    200: { description: "Articles for journalist", content: { "application/json": { schema: z.object({ articles: z.array(ArticleAuthorViewSchema) }) } } },
-    500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: "get",
-  path: "/v1/articles/by-journalist-outlet/{journalistId}/{outletId}",
-  operationId: "getArticlesByJournalistOutlet",
-  summary: "Articles by a journalist at a specific outlet",
-  request: { headers: IdentityHeadersSchema, params: z.object({ journalistId: z.string().uuid(), outletId: z.string().uuid() }) },
-  responses: {
-    200: { description: "Articles for journalist at outlet", content: { "application/json": { schema: z.object({ articles: z.array(ArticleAuthorViewSchema) }) } } },
-    500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
-  },
-});
-
 // Search
 
 registry.registerPath({
@@ -442,6 +403,34 @@ registry.registerPath({
     200: { description: "Search results", content: { "application/json": { schema: z.object({ articles: z.array(ArticleSchema) }) } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
+  },
+});
+
+// Discovery pipelines
+
+registry.registerPath({
+  method: "post",
+  path: "/v1/discover/outlet-articles",
+  operationId: "discoverOutletArticles",
+  summary: "Discover recent articles from an outlet via Google News + scraping, and create scoped discoveries",
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: DiscoverOutletArticlesBodySchema } } } },
+  responses: {
+    200: { description: "Discovered articles with extracted authors", content: { "application/json": { schema: z.object({ articles: z.array(DiscoveredArticleSchema) }) } } },
+    400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
+    502: { description: "Upstream service error", content: { "application/json": { schema: ErrorResponseSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/v1/discover/journalist-publications",
+  operationId: "discoverJournalistPublications",
+  summary: "Discover recent publications by a journalist and create scoped discoveries",
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: DiscoverJournalistPublicationsBodySchema } } } },
+  responses: {
+    200: { description: "Journalist publications with extracted authors", content: { "application/json": { schema: z.object({ articles: z.array(DiscoveredArticleSchema) }) } } },
+    400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
+    502: { description: "Upstream service error", content: { "application/json": { schema: ErrorResponseSchema } } },
   },
 });
 
@@ -459,46 +448,6 @@ registry.registerPath({
   responses: {
     200: { description: "Articles found", content: { "application/json": { schema: z.object({ articles: z.array(ArticleSchema) }) } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: "get",
-  path: "/internal/articles/by-outlet-topic/{outletId}/{topicId}",
-  operationId: "getArticlesByOutletTopic",
-  summary: "Articles for an outlet+topic combo",
-  request: { headers: IdentityHeadersSchema, params: z.object({ outletId: z.string().uuid(), topicId: z.string().uuid() }) },
-  responses: {
-    200: { description: "Articles found", content: { "application/json": { schema: z.object({ articles: z.array(ArticleSchema) }) } } },
-    500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
-  },
-});
-
-// Discovery endpoints
-
-registry.registerPath({
-  method: "post",
-  path: "/v1/discover/outlet-articles",
-  operationId: "discoverOutletArticles",
-  summary: "Discover recent articles from an outlet via Google News + Firecrawl extraction",
-  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: DiscoverOutletArticlesBodySchema } } } },
-  responses: {
-    200: { description: "Discovered articles with extracted authors", content: { "application/json": { schema: z.object({ articles: z.array(DiscoveredArticleSchema) }) } } },
-    400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
-    502: { description: "Upstream service error", content: { "application/json": { schema: ErrorResponseSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: "post",
-  path: "/v1/discover/journalist-publications",
-  operationId: "discoverJournalistPublications",
-  summary: "Discover recent publications by a journalist across the web",
-  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: DiscoverJournalistPublicationsBodySchema } } } },
-  responses: {
-    200: { description: "Journalist publications with extracted authors", content: { "application/json": { schema: z.object({ articles: z.array(DiscoveredArticleSchema) }) } } },
-    400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
-    502: { description: "Upstream service error", content: { "application/json": { schema: ErrorResponseSchema } } },
   },
 });
 

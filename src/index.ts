@@ -7,10 +7,9 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import healthRoutes from "./routes/health.js";
 import articlesRoutes from "./routes/articles.js";
 import topicsRoutes from "./routes/topics.js";
-import outletTopicArticlesRoutes from "./routes/outlet-topic-articles.js";
-import journalistArticlesRoutes from "./routes/journalist-articles.js";
-import internalRoutes from "./routes/internal.js";
+import discoveriesRoutes from "./routes/discoveries.js";
 import discoverRoutes from "./routes/discover.js";
+import internalRoutes from "./routes/internal.js";
 import { requireIdentity } from "./middleware/identity.js";
 import { db } from "./db/index.js";
 
@@ -40,8 +39,7 @@ app.use(healthRoutes);
 app.use(requireIdentity);
 app.use(articlesRoutes);
 app.use(topicsRoutes);
-app.use(outletTopicArticlesRoutes);
-app.use(journalistArticlesRoutes);
+app.use(discoveriesRoutes);
 app.use(discoverRoutes);
 app.use(internalRoutes);
 

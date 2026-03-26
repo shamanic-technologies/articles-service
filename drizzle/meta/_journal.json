@@ -8,6 +8,13 @@
       "when": 1771997372850,
       "tag": "0000_silly_firebrand",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774617600000,
+      "tag": "0001_refactor_data_model",
+      "breakpoints": true
     }
   ]
 }

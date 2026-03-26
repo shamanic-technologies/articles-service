@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { articles, outletTopicArticles, searchedJournalistArticles } from "../db/schema.js";
+import { articles } from "../db/schema.js";
 import { requireApiKey } from "../middleware/auth.js";
 import { CreateArticleBodySchema, BulkCreateArticlesBodySchema } from "../schemas.js";
 
@@ -35,48 +35,12 @@ router.post("/v1/articles", requireApiKey, async (req, res) => {
   }
 });
 
-// GET /v1/articles — list with filters
+// GET /v1/articles — list with pagination
 router.get("/v1/articles", async (req, res) => {
   try {
-    const { outletId, topicId, journalistId, limit, offset } = req.query;
-    const take = Math.min(Number(limit) || 20, 100);
-    const skip = Number(offset) || 0;
+    const take = Math.min(Number(req.query.limit) || 20, 100);
+    const skip = Number(req.query.offset) || 0;
 
-    // If filtering by outlet+topic, join through outlet_topic_articles
-    if (outletId || topicId) {
-      const conditions = [];
-      if (outletId) conditions.push(eq(outletTopicArticles.outletId, outletId as string));
-      if (topicId) conditions.push(eq(outletTopicArticles.topicId, topicId as string));
-
-      const rows = await db
-        .select({ article: articles })
-        .from(articles)
-        .innerJoin(outletTopicArticles, eq(articles.id, outletTopicArticles.articleId))
-        .where(conditions.length === 1 ? conditions[0] : sql`${conditions[0]} AND ${conditions[1]}`)
-        .limit(take)
-        .offset(skip)
-        .orderBy(articles.createdAt);
-
-      res.json({ articles: rows.map((r) => r.article) });
-      return;
-    }
-
-    // If filtering by journalist, join through searched_journalist_articles
-    if (journalistId) {
-      const rows = await db
-        .select({ article: articles })
-        .from(articles)
-        .innerJoin(searchedJournalistArticles, eq(articles.id, searchedJournalistArticles.articleId))
-        .where(eq(searchedJournalistArticles.journalistId, journalistId as string))
-        .limit(take)
-        .offset(skip)
-        .orderBy(articles.createdAt);
-
-      res.json({ articles: rows.map((r) => r.article) });
-      return;
-    }
-
-    // No filters — list all
     const rows = await db
       .select()
       .from(articles)
@@ -108,58 +72,6 @@ router.get("/v1/articles/authors", async (req, res) => {
     res.json({ articles: result });
   } catch (err) {
     console.error("[Articles Service] Error fetching authors view:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// GET /v1/articles/by-journalist/:journalistId
-router.get("/v1/articles/by-journalist/:journalistId", async (req, res) => {
-  try {
-    const rows = await db
-      .select({ article: articles })
-      .from(articles)
-      .innerJoin(searchedJournalistArticles, eq(articles.id, searchedJournalistArticles.articleId))
-      .where(eq(searchedJournalistArticles.journalistId, req.params.journalistId))
-      .orderBy(articles.createdAt);
-
-    res.json({ articles: rows.map((r) => computeAuthorView(r.article)) });
-  } catch (err) {
-    console.error("[Articles Service] Error fetching journalist articles:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// GET /v1/articles/by-journalist-outlet/:journalistId/:outletId
-router.get("/v1/articles/by-journalist-outlet/:journalistId/:outletId", async (req, res) => {
-  try {
-    const { journalistId, outletId } = req.params;
-
-    // Articles that are both linked to this journalist AND to this outlet
-    const journalistArticleIds = db
-      .select({ id: searchedJournalistArticles.articleId })
-      .from(searchedJournalistArticles)
-      .where(eq(searchedJournalistArticles.journalistId, journalistId));
-
-    const rows = await db
-      .select({ article: articles })
-      .from(articles)
-      .innerJoin(outletTopicArticles, eq(articles.id, outletTopicArticles.articleId))
-      .where(
-        sql`${outletTopicArticles.outletId} = ${outletId} AND ${articles.id} IN (${journalistArticleIds})`
-      )
-      .orderBy(articles.createdAt);
-
-    // Deduplicate (article may appear multiple times from different topics)
-    const seen = new Set<string>();
-    const unique = rows.filter((r) => {
-      if (seen.has(r.article.id)) return false;
-      seen.add(r.article.id);
-      return true;
-    });
-
-    res.json({ articles: unique.map((r) => computeAuthorView(r.article)) });
-  } catch (err) {
-    console.error("[Articles Service] Error fetching journalist-outlet articles:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -270,16 +182,13 @@ router.post("/v1/articles/search", async (req, res) => {
 function computeAuthorView(article: typeof articles.$inferSelect) {
   const computedTitle = article.ogTitle || article.twitterTitle || null;
 
-  // Find the longest text field
   const textFields = [article.snippet, article.ogDescription, article.twitterDescription].filter(Boolean) as string[];
   const computedLargestContent = textFields.length > 0
     ? textFields.reduce((a, b) => (a.length >= b.length ? a : b))
     : null;
 
-  // Collect non-null authors
   const computedAuthors = [article.author, article.articleAuthor, article.twitterCreator].filter(Boolean) as string[];
 
-  // Try to parse published date
   let computedPublishedAt: string | null = null;
   if (article.articlePublished) {
     try {
