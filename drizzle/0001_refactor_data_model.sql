@@ -3,8 +3,12 @@ DROP TABLE IF EXISTS "searched_journalist_articles";
 --> statement-breakpoint
 DROP TABLE IF EXISTS "outlet_topic_articles";
 --> statement-breakpoint
--- Rename press_topics to topics
-ALTER TABLE "press_topics" RENAME TO "topics";
+-- Rename press_topics to topics (idempotent: skip if already renamed)
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'press_topics') THEN
+    ALTER TABLE "press_topics" RENAME TO "topics";
+  END IF;
+END $$;
 --> statement-breakpoint
 -- Update the unique index name for topics
 DROP INDEX IF EXISTS "idx_press_topics_name";
