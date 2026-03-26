@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, uniqueIndex, index, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core";
 
 export const articles = pgTable(
   "articles",
@@ -27,8 +27,8 @@ export const articles = pgTable(
   ]
 );
 
-export const pressTopics = pgTable(
-  "press_topics",
+export const topics = pgTable(
+  "topics",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     topicName: text("topic_name").notNull(),
@@ -36,42 +36,39 @@ export const pressTopics = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("idx_press_topics_name").on(table.topicName),
+    uniqueIndex("idx_topics_name").on(table.topicName),
   ]
 );
 
-export const outletTopicArticles = pgTable(
-  "outlet_topic_articles",
+export const articleDiscoveries = pgTable(
+  "article_discoveries",
   {
-    outletId: uuid("outlet_id").notNull(),
-    topicId: uuid("topic_id").notNull().references(() => pressTopics.id),
+    id: uuid("id").primaryKey().defaultRandom(),
     articleId: uuid("article_id").notNull().references(() => articles.id),
+    orgId: uuid("org_id").notNull(),
+    brandId: uuid("brand_id").notNull(),
+    featureSlug: text("feature_slug").notNull(),
+    campaignId: uuid("campaign_id").notNull(),
+    outletId: uuid("outlet_id"),
+    journalistId: uuid("journalist_id"),
+    topicId: uuid("topic_id").references(() => topics.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    primaryKey({ columns: [table.outletId, table.topicId, table.articleId] }),
-    index("idx_ota_outlet").on(table.outletId),
-    index("idx_ota_topic").on(table.topicId),
-    index("idx_ota_article").on(table.articleId),
-  ]
-);
-
-export const searchedJournalistArticles = pgTable(
-  "searched_journalist_articles",
-  {
-    articleId: uuid("article_id").notNull().references(() => articles.id),
-    journalistId: uuid("journalist_id").notNull(),
-  },
-  (table) => [
-    primaryKey({ columns: [table.articleId, table.journalistId] }),
-    index("idx_sja_journalist").on(table.journalistId),
+    index("idx_ad_article").on(table.articleId),
+    index("idx_ad_org").on(table.orgId),
+    index("idx_ad_brand").on(table.brandId),
+    index("idx_ad_campaign").on(table.campaignId),
+    index("idx_ad_outlet").on(table.outletId),
+    index("idx_ad_journalist").on(table.journalistId),
+    index("idx_ad_topic").on(table.topicId),
+    index("idx_ad_article_campaign").on(table.articleId, table.campaignId),
   ]
 );
 
 export type Article = typeof articles.$inferSelect;
 export type NewArticle = typeof articles.$inferInsert;
-export type PressTopic = typeof pressTopics.$inferSelect;
-export type NewPressTopic = typeof pressTopics.$inferInsert;
-export type OutletTopicArticle = typeof outletTopicArticles.$inferSelect;
-export type SearchedJournalistArticle = typeof searchedJournalistArticles.$inferSelect;
+export type Topic = typeof topics.$inferSelect;
+export type NewTopic = typeof topics.$inferInsert;
+export type ArticleDiscovery = typeof articleDiscoveries.$inferSelect;
+export type NewArticleDiscovery = typeof articleDiscoveries.$inferInsert;

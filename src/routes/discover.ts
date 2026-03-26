@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { articles, searchedJournalistArticles } from "../db/schema.js";
+import { articles, articleDiscoveries } from "../db/schema.js";
 import { requireApiKey } from "../middleware/auth.js";
 import { searchNews } from "../services/google.js";
 import { extractArticles, type ExtractResultSuccess } from "../services/scraping.js";
@@ -22,7 +22,7 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
       return;
     }
 
-    const { outletDomain, maxArticles } = parsed.data;
+    const { outletDomain, brandId, campaignId, maxArticles } = parsed.data;
     const identityHeaders = {
       orgId: req.headers["x-org-id"] as string,
       userId: req.headers["x-user-id"] as string,
@@ -60,7 +60,6 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
     }
 
     // Step 3: Bulk upsert articles
-    // Merge Google News metadata with scraping extraction
     const newsByUrl = new Map(newsResults.map((r) => [r.link, r]));
     const articleValues = allExtractResults.map((ext) => {
       const news = newsByUrl.get(ext.url);
@@ -90,7 +89,26 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
       })
       .returning();
 
-    // Step 4: Build response with extracted author details
+    // Step 4: Create discovery records scoped to this campaign
+    const discoveryValues = upserted.map((article) => ({
+      articleId: article.id,
+      orgId: identityHeaders.orgId,
+      brandId,
+      featureSlug: identityHeaders.featureSlug ?? "unknown",
+      campaignId,
+      outletId: null as string | null,
+      journalistId: null as string | null,
+      topicId: null as string | null,
+    }));
+
+    if (discoveryValues.length > 0) {
+      await db
+        .insert(articleDiscoveries)
+        .values(discoveryValues)
+        .onConflictDoNothing();
+    }
+
+    // Step 5: Build response with extracted author details
     const extractByUrl = new Map(allExtractResults.map((r) => [r.url, r]));
     const response = upserted.map((article) => {
       const ext = extractByUrl.get(article.articleUrl);
@@ -123,7 +141,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
       return;
     }
 
-    const { journalistFirstName, journalistLastName, journalistId, maxResults } = parsed.data;
+    const { journalistFirstName, journalistLastName, journalistId, brandId, campaignId, maxResults } = parsed.data;
     const identityHeaders = {
       orgId: req.headers["x-org-id"] as string,
       userId: req.headers["x-user-id"] as string,
@@ -187,16 +205,22 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
       })
       .returning();
 
-    // Step 4: Link articles to journalist
-    const linkValues = upserted.map((a) => ({
+    // Step 4: Create discovery records scoped to this campaign + journalist
+    const discoveryValues = upserted.map((a) => ({
       articleId: a.id,
+      orgId: identityHeaders.orgId,
+      brandId,
+      featureSlug: identityHeaders.featureSlug ?? "unknown",
+      campaignId,
+      outletId: null as string | null,
       journalistId,
+      topicId: null as string | null,
     }));
 
-    if (linkValues.length > 0) {
+    if (discoveryValues.length > 0) {
       await db
-        .insert(searchedJournalistArticles)
-        .values(linkValues)
+        .insert(articleDiscoveries)
+        .values(discoveryValues)
         .onConflictDoNothing();
     }
 

@@ -1,7 +1,6 @@
 import { Router } from "express";
-import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { pressTopics } from "../db/schema.js";
+import { topics } from "../db/schema.js";
 import { requireApiKey } from "../middleware/auth.js";
 import { CreateTopicBodySchema, BulkCreateTopicsBodySchema } from "../schemas.js";
 
@@ -17,10 +16,10 @@ router.post("/v1/topics", requireApiKey, async (req, res) => {
     }
 
     const [topic] = await db
-      .insert(pressTopics)
+      .insert(topics)
       .values(parsed.data)
       .onConflictDoUpdate({
-        target: pressTopics.topicName,
+        target: topics.topicName,
         set: { updatedAt: new Date() },
       })
       .returning();
@@ -37,8 +36,8 @@ router.get("/v1/topics", async (_req, res) => {
   try {
     const rows = await db
       .select()
-      .from(pressTopics)
-      .orderBy(pressTopics.topicName);
+      .from(topics)
+      .orderBy(topics.topicName);
 
     res.json({ topics: rows });
   } catch (err) {
@@ -62,10 +61,10 @@ router.post("/v1/topics/bulk", requireApiKey, async (req, res) => {
     }
 
     const result = await db
-      .insert(pressTopics)
+      .insert(topics)
       .values(parsed.data.topics)
       .onConflictDoUpdate({
-        target: pressTopics.topicName,
+        target: topics.topicName,
         set: { updatedAt: new Date() },
       })
       .returning();

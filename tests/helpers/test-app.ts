@@ -6,10 +6,9 @@ import path from "path";
 import healthRoutes from "../../src/routes/health.js";
 import articlesRoutes from "../../src/routes/articles.js";
 import topicsRoutes from "../../src/routes/topics.js";
-import outletTopicArticlesRoutes from "../../src/routes/outlet-topic-articles.js";
-import journalistArticlesRoutes from "../../src/routes/journalist-articles.js";
-import internalRoutes from "../../src/routes/internal.js";
+import discoveriesRoutes from "../../src/routes/discoveries.js";
 import discoverRoutes from "../../src/routes/discover.js";
+import internalRoutes from "../../src/routes/internal.js";
 import { requireIdentity } from "../../src/middleware/identity.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,6 +19,8 @@ export const TEST_ORG_ID = "a0000000-0000-0000-0000-000000000001";
 export const TEST_USER_ID = "b0000000-0000-0000-0000-000000000001";
 export const TEST_RUN_ID = "c0000000-0000-0000-0000-000000000001";
 export const TEST_FEATURE_SLUG = "test-feature";
+export const TEST_BRAND_ID = "e0000000-0000-4000-8000-000000000001";
+export const TEST_CAMPAIGN_ID = "f0000000-0000-4000-8000-000000000001";
 
 export function createTestApp() {
   const app = express();
@@ -36,8 +37,7 @@ export function createTestApp() {
   app.use(requireIdentity);
   app.use(articlesRoutes);
   app.use(topicsRoutes);
-  app.use(outletTopicArticlesRoutes);
-  app.use(journalistArticlesRoutes);
+  app.use(discoveriesRoutes);
   app.use(discoverRoutes);
   app.use(internalRoutes);
   app.use((_req: express.Request, res: express.Response) => {

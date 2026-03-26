@@ -4,8 +4,8 @@ import {
   BulkCreateArticlesBodySchema,
   CreateTopicBodySchema,
   BulkCreateTopicsBodySchema,
-  CreateOutletTopicArticleBodySchema,
-  CreateJournalistArticleBodySchema,
+  CreateDiscoveryBodySchema,
+  BulkCreateDiscoveriesBodySchema,
   SearchArticlesBodySchema,
   DiscoverOutletArticlesBodySchema,
   DiscoverJournalistPublicationsBodySchema,
@@ -90,31 +90,52 @@ describe("BulkCreateTopicsBodySchema", () => {
   });
 });
 
-describe("CreateOutletTopicArticleBodySchema", () => {
-  it("validates a link", () => {
-    const result = CreateOutletTopicArticleBodySchema.safeParse({
-      outletId: "550e8400-e29b-41d4-a716-446655440000",
-      topicId: "550e8400-e29b-41d4-a716-446655440001",
-      articleId: "550e8400-e29b-41d4-a716-446655440002",
+describe("CreateDiscoveryBodySchema", () => {
+  it("validates a discovery with required fields", () => {
+    const result = CreateDiscoveryBodySchema.safeParse({
+      articleId: "550e8400-e29b-41d4-a716-446655440000",
+      brandId: "550e8400-e29b-41d4-a716-446655440001",
+      campaignId: "550e8400-e29b-41d4-a716-446655440002",
     });
     expect(result.success).toBe(true);
   });
 
+  it("validates a discovery with optional fields", () => {
+    const result = CreateDiscoveryBodySchema.safeParse({
+      articleId: "550e8400-e29b-41d4-a716-446655440000",
+      brandId: "550e8400-e29b-41d4-a716-446655440001",
+      campaignId: "550e8400-e29b-41d4-a716-446655440002",
+      outletId: "550e8400-e29b-41d4-a716-446655440003",
+      journalistId: "550e8400-e29b-41d4-a716-446655440004",
+      topicId: "550e8400-e29b-41d4-a716-446655440005",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects missing articleId", () => {
+    const result = CreateDiscoveryBodySchema.safeParse({
+      brandId: "550e8400-e29b-41d4-a716-446655440001",
+      campaignId: "550e8400-e29b-41d4-a716-446655440002",
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("rejects invalid UUIDs", () => {
-    const result = CreateOutletTopicArticleBodySchema.safeParse({
-      outletId: "not-a-uuid",
-      topicId: "not-a-uuid",
+    const result = CreateDiscoveryBodySchema.safeParse({
       articleId: "not-a-uuid",
+      brandId: "not-a-uuid",
+      campaignId: "not-a-uuid",
     });
     expect(result.success).toBe(false);
   });
 });
 
-describe("CreateJournalistArticleBodySchema", () => {
-  it("validates a link", () => {
-    const result = CreateJournalistArticleBodySchema.safeParse({
-      articleId: "550e8400-e29b-41d4-a716-446655440000",
-      journalistId: "550e8400-e29b-41d4-a716-446655440001",
+describe("BulkCreateDiscoveriesBodySchema", () => {
+  it("validates an array of discoveries", () => {
+    const result = BulkCreateDiscoveriesBodySchema.safeParse({
+      discoveries: [
+        { articleId: "550e8400-e29b-41d4-a716-446655440000", brandId: "550e8400-e29b-41d4-a716-446655440001", campaignId: "550e8400-e29b-41d4-a716-446655440002" },
+      ],
     });
     expect(result.success).toBe(true);
   });
@@ -146,9 +167,11 @@ describe("SearchArticlesBodySchema", () => {
 });
 
 describe("DiscoverOutletArticlesBodySchema", () => {
-  it("validates with just outletDomain", () => {
+  it("validates with required fields", () => {
     const result = DiscoverOutletArticlesBodySchema.safeParse({
       outletDomain: "techcrunch.com",
+      brandId: "550e8400-e29b-41d4-a716-446655440000",
+      campaignId: "550e8400-e29b-41d4-a716-446655440001",
     });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -159,24 +182,43 @@ describe("DiscoverOutletArticlesBodySchema", () => {
   it("validates with custom maxArticles", () => {
     const result = DiscoverOutletArticlesBodySchema.safeParse({
       outletDomain: "wired.com",
+      brandId: "550e8400-e29b-41d4-a716-446655440000",
+      campaignId: "550e8400-e29b-41d4-a716-446655440001",
       maxArticles: 5,
     });
     expect(result.success).toBe(true);
   });
 
   it("rejects missing outletDomain", () => {
-    const result = DiscoverOutletArticlesBodySchema.safeParse({});
+    const result = DiscoverOutletArticlesBodySchema.safeParse({
+      brandId: "550e8400-e29b-41d4-a716-446655440000",
+      campaignId: "550e8400-e29b-41d4-a716-446655440001",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects missing brandId", () => {
+    const result = DiscoverOutletArticlesBodySchema.safeParse({
+      outletDomain: "techcrunch.com",
+      campaignId: "550e8400-e29b-41d4-a716-446655440001",
+    });
     expect(result.success).toBe(false);
   });
 
   it("rejects empty outletDomain", () => {
-    const result = DiscoverOutletArticlesBodySchema.safeParse({ outletDomain: "" });
+    const result = DiscoverOutletArticlesBodySchema.safeParse({
+      outletDomain: "",
+      brandId: "550e8400-e29b-41d4-a716-446655440000",
+      campaignId: "550e8400-e29b-41d4-a716-446655440001",
+    });
     expect(result.success).toBe(false);
   });
 
   it("rejects maxArticles > 20", () => {
     const result = DiscoverOutletArticlesBodySchema.safeParse({
       outletDomain: "example.com",
+      brandId: "550e8400-e29b-41d4-a716-446655440000",
+      campaignId: "550e8400-e29b-41d4-a716-446655440001",
       maxArticles: 25,
     });
     expect(result.success).toBe(false);
@@ -189,6 +231,8 @@ describe("DiscoverJournalistPublicationsBodySchema", () => {
       journalistFirstName: "Sarah",
       journalistLastName: "Perez",
       journalistId: "550e8400-e29b-41d4-a716-446655440000",
+      brandId: "550e8400-e29b-41d4-a716-446655440001",
+      campaignId: "550e8400-e29b-41d4-a716-446655440002",
     });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -201,6 +245,8 @@ describe("DiscoverJournalistPublicationsBodySchema", () => {
       journalistFirstName: "Sarah",
       journalistLastName: "Perez",
       journalistId: "550e8400-e29b-41d4-a716-446655440000",
+      brandId: "550e8400-e29b-41d4-a716-446655440001",
+      campaignId: "550e8400-e29b-41d4-a716-446655440002",
       maxResults: 5,
     });
     expect(result.success).toBe(true);
@@ -210,6 +256,18 @@ describe("DiscoverJournalistPublicationsBodySchema", () => {
     const result = DiscoverJournalistPublicationsBodySchema.safeParse({
       journalistFirstName: "Sarah",
       journalistId: "550e8400-e29b-41d4-a716-446655440000",
+      brandId: "550e8400-e29b-41d4-a716-446655440001",
+      campaignId: "550e8400-e29b-41d4-a716-446655440002",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects missing brandId", () => {
+    const result = DiscoverJournalistPublicationsBodySchema.safeParse({
+      journalistFirstName: "Sarah",
+      journalistLastName: "Perez",
+      journalistId: "550e8400-e29b-41d4-a716-446655440000",
+      campaignId: "550e8400-e29b-41d4-a716-446655440002",
     });
     expect(result.success).toBe(false);
   });
@@ -219,6 +277,8 @@ describe("DiscoverJournalistPublicationsBodySchema", () => {
       journalistFirstName: "Sarah",
       journalistLastName: "Perez",
       journalistId: "not-a-uuid",
+      brandId: "550e8400-e29b-41d4-a716-446655440001",
+      campaignId: "550e8400-e29b-41d4-a716-446655440002",
     });
     expect(result.success).toBe(false);
   });
