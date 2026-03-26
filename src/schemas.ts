@@ -192,6 +192,7 @@ export const IdentityHeadersSchema = z.object({
   "x-user-id": z.string().uuid().openapi({ description: "Internal user UUID" }),
   "x-run-id": z.string().uuid().openapi({ description: "Run UUID from runs-service" }),
   "x-feature-slug": z.string().optional().openapi({ description: "Feature slug for tracking/filtering" }),
+  "x-campaign-id": z.string().uuid().optional().openapi({ description: "Campaign UUID for inter-service propagation" }),
 });
 
 // --- Register paths ---

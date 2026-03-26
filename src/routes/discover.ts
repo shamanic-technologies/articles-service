@@ -28,6 +28,7 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
       userId: req.headers["x-user-id"] as string,
       runId: req.headers["x-run-id"] as string,
       featureSlug: req.headers["x-feature-slug"] as string | undefined,
+      campaignId: req.headers["x-campaign-id"] as string | undefined,
     };
 
     // Step 1: Search Google News for articles from this outlet
@@ -147,6 +148,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
       userId: req.headers["x-user-id"] as string,
       runId: req.headers["x-run-id"] as string,
       featureSlug: req.headers["x-feature-slug"] as string | undefined,
+      campaignId: req.headers["x-campaign-id"] as string | undefined,
     };
 
     // Step 1: Search Google News for this journalist's articles

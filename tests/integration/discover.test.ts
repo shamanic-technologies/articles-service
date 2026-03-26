@@ -173,6 +173,21 @@ describe("POST /v1/discover/outlet-articles", () => {
 
     expect(mockSearchNews).toHaveBeenCalledWith("site:techcrunch.com", 10, expect.anything());
   });
+
+  it("forwards x-campaign-id to downstream services", async () => {
+    mockSearchNews.mockResolvedValue([]);
+
+    await request(app)
+      .post("/v1/discover/outlet-articles")
+      .set(getAuthHeaders())
+      .send({ outletDomain: "techcrunch.com", brandId: TEST_BRAND_ID, campaignId: TEST_CAMPAIGN_ID });
+
+    expect(mockSearchNews).toHaveBeenCalledWith(
+      "site:techcrunch.com",
+      10,
+      expect.objectContaining({ campaignId: TEST_CAMPAIGN_ID }),
+    );
+  });
 });
 
 describe("POST /v1/discover/journalist-publications", () => {

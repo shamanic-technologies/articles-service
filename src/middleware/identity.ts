@@ -7,6 +7,7 @@ export function requireIdentity(req: Request, res: Response, next: NextFunction)
   const userId = req.headers["x-user-id"] as string | undefined;
   const runId = req.headers["x-run-id"] as string | undefined;
   const featureSlug = req.headers["x-feature-slug"] as string | undefined;
+  const campaignId = req.headers["x-campaign-id"] as string | undefined;
 
   if (!orgId || !userId || !runId) {
     res.status(400).json({
@@ -25,6 +26,13 @@ export function requireIdentity(req: Request, res: Response, next: NextFunction)
   if (featureSlug !== undefined && (typeof featureSlug !== "string" || featureSlug.trim() === "")) {
     res.status(400).json({
       error: "x-feature-slug must be a non-empty string when provided",
+    });
+    return;
+  }
+
+  if (campaignId !== undefined && !UUID_REGEX.test(campaignId)) {
+    res.status(400).json({
+      error: "x-campaign-id must be a valid UUID when provided",
     });
     return;
   }

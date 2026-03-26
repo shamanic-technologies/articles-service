@@ -14,7 +14,7 @@ interface NewsSearchResponse {
 export async function searchNews(
   query: string,
   num: number,
-  headers: { orgId: string; userId: string; runId: string; featureSlug?: string },
+  headers: { orgId: string; userId: string; runId: string; featureSlug?: string; campaignId?: string },
 ): Promise<NewsResult[]> {
   const baseUrl = process.env.GOOGLE_SERVICE_URL;
   const apiKey = process.env.GOOGLE_SERVICE_API_KEY;
@@ -31,6 +31,7 @@ export async function searchNews(
       "x-user-id": headers.userId,
       "x-run-id": headers.runId,
       ...(headers.featureSlug ? { "x-feature-slug": headers.featureSlug } : {}),
+      ...(headers.campaignId ? { "x-campaign-id": headers.campaignId } : {}),
     },
     body: JSON.stringify({ query, num }),
   });

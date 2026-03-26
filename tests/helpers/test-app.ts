@@ -52,6 +52,7 @@ export function getIdentityHeaders() {
     "x-user-id": TEST_USER_ID,
     "x-run-id": TEST_RUN_ID,
     "x-feature-slug": TEST_FEATURE_SLUG,
+    "x-campaign-id": TEST_CAMPAIGN_ID,
   };
 }
 
@@ -63,5 +64,6 @@ export function getAuthHeaders() {
     "x-user-id": TEST_USER_ID,
     "x-run-id": TEST_RUN_ID,
     "x-feature-slug": TEST_FEATURE_SLUG,
+    "x-campaign-id": TEST_CAMPAIGN_ID,
   };
 }
