@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import request from "supertest";
-import { createTestApp, getAuthHeaders, TEST_ORG_ID, TEST_BRAND_ID, TEST_CAMPAIGN_ID, TEST_FEATURE_SLUG } from "../helpers/test-app.js";
+import { createTestApp, getAuthHeaders, TEST_ORG_ID, TEST_USER_ID, TEST_RUN_ID, TEST_BRAND_ID, TEST_CAMPAIGN_ID, TEST_FEATURE_SLUG } from "../helpers/test-app.js";
 import { cleanTestData, closeDb } from "../helpers/test-db.js";
 import { db } from "../../src/db/index.js";
 import { articles, articleDiscoveries } from "../../src/db/schema.js";
@@ -188,6 +188,29 @@ describe("POST /v1/discover/outlet-articles", () => {
       expect.objectContaining({ campaignId: TEST_CAMPAIGN_ID }),
     );
   });
+
+  it("uses body campaignId for downstream calls when x-campaign-id header is absent", async () => {
+    mockSearchNews.mockResolvedValue([]);
+
+    const headersWithoutCampaign = {
+      "X-API-Key": "test-api-key",
+      "Content-Type": "application/json",
+      "x-org-id": TEST_ORG_ID,
+      "x-user-id": TEST_USER_ID,
+      "x-run-id": TEST_RUN_ID,
+    };
+
+    await request(app)
+      .post("/v1/discover/outlet-articles")
+      .set(headersWithoutCampaign)
+      .send({ outletDomain: "techcrunch.com", brandId: TEST_BRAND_ID, campaignId: TEST_CAMPAIGN_ID });
+
+    expect(mockSearchNews).toHaveBeenCalledWith(
+      "site:techcrunch.com",
+      10,
+      expect.objectContaining({ campaignId: TEST_CAMPAIGN_ID }),
+    );
+  });
 });
 
 describe("POST /v1/discover/journalist-publications", () => {
@@ -288,6 +311,35 @@ describe("POST /v1/discover/journalist-publications", () => {
       });
 
     expect(mockSearchNews).toHaveBeenCalledWith('"Sarah Perez"', 5, expect.anything());
+  });
+
+  it("uses body campaignId for downstream calls when x-campaign-id header is absent", async () => {
+    mockSearchNews.mockResolvedValue([]);
+
+    const headersWithoutCampaign = {
+      "X-API-Key": "test-api-key",
+      "Content-Type": "application/json",
+      "x-org-id": TEST_ORG_ID,
+      "x-user-id": TEST_USER_ID,
+      "x-run-id": TEST_RUN_ID,
+    };
+
+    await request(app)
+      .post("/v1/discover/journalist-publications")
+      .set(headersWithoutCampaign)
+      .send({
+        journalistFirstName: "Sarah",
+        journalistLastName: "Perez",
+        journalistId,
+        brandId: TEST_BRAND_ID,
+        campaignId: TEST_CAMPAIGN_ID,
+      });
+
+    expect(mockSearchNews).toHaveBeenCalledWith(
+      '"Sarah Perez"',
+      10,
+      expect.objectContaining({ campaignId: TEST_CAMPAIGN_ID }),
+    );
   });
 
   it("does not duplicate discoveries on re-discovery", async () => {
