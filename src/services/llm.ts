@@ -1,4 +1,3 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { IdentityHeaders } from "./google.js";
 
 export interface ExtractedAuthor {
@@ -13,43 +12,14 @@ export interface LlmExtractResult {
   publishedAt: string | null;
 }
 
-export async function resolveAnthropicKey(headers: IdentityHeaders): Promise<string> {
-  const baseUrl = process.env.KEY_SERVICE_URL;
-  const apiKey = process.env.KEY_SERVICE_API_KEY;
-  if (!baseUrl || !apiKey) {
-    throw new Error("KEY_SERVICE_URL and KEY_SERVICE_API_KEY must be set");
-  }
-
-  const res = await fetch(`${baseUrl}/keys/anthropic/decrypt`, {
-    method: "GET",
-    headers: {
-      "X-API-Key": apiKey,
-      "x-org-id": headers.orgId,
-      "x-user-id": headers.userId,
-      "x-run-id": headers.runId,
-      "X-Caller-Service": "articles-service",
-      "X-Caller-Method": "GET",
-      "X-Caller-Path": "/keys/anthropic/decrypt",
-    },
-  });
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Key-service returned ${res.status} for anthropic key: ${body}`);
-  }
-
-  const data = (await res.json()) as { key: string; keySource: string };
-  return data.key;
-}
-
-const EXTRACTION_PROMPT = `Extract author names and publication date from this article. Return ONLY valid JSON.
+const SYSTEM_PROMPT = `You extract author names and publication dates from article HTML/markdown.
 
 Response schema:
 {
-  "isArticle": boolean,       // false if the page is not a press/news article (e.g. homepage, product page, 404, empty)
+  "isArticle": boolean,
   "authors": [
     {
-      "type": "person" | "organization",  // "organization" for newsrooms, agencies, brands (e.g. "Reuters", "AP", "TechCrunch Staff")
+      "type": "person" | "organization",
       "firstName": "string",
       "lastName": "string"
     }
@@ -73,53 +43,74 @@ Date rules:
 - If no date is found at all, return null.
 
 Non-article pages:
-- If the content is clearly not a press article (homepage, product page, 404, login wall, paywall, empty page), set isArticle to false and return empty authors and null publishedAt.
+- If the content is clearly not a press article (homepage, product page, 404, login wall, paywall, empty page), set isArticle to false and return empty authors and null publishedAt.`;
 
-Article content:
-`;
+interface ChatCompleteResponse {
+  content: string;
+  json?: Record<string, unknown>;
+  tokensInput: number;
+  tokensOutput: number;
+  model: string;
+}
 
 export async function extractMetadataFromMarkdown(
   markdown: string,
   headers: IdentityHeaders,
-  anthropicKey?: string,
 ): Promise<LlmExtractResult> {
-  const key = anthropicKey ?? await resolveAnthropicKey(headers);
-  const anthropic = new Anthropic({ apiKey: key });
+  const baseUrl = process.env.CHAT_SERVICE_URL;
+  const apiKey = process.env.CHAT_SERVICE_API_KEY;
+  if (!baseUrl || !apiKey) {
+    throw new Error("CHAT_SERVICE_URL and CHAT_SERVICE_API_KEY must be set");
+  }
 
   // Truncate very long articles to save tokens — metadata is always near the top
   const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) : markdown;
 
-  const response = await anthropic.messages.create({
-    model: "claude-haiku-4-5",
-    max_tokens: 512,
-    messages: [
-      {
-        role: "user",
-        content: EXTRACTION_PROMPT + truncated,
-      },
-    ],
+  const res = await fetch(`${baseUrl}/complete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": apiKey,
+      "x-org-id": headers.orgId,
+      "x-user-id": headers.userId,
+      "x-run-id": headers.runId,
+      ...(headers.workflowName ? { "x-workflow-name": headers.workflowName } : {}),
+      ...(headers.featureSlug ? { "x-feature-slug": headers.featureSlug } : {}),
+      ...(headers.brandId ? { "x-brand-id": headers.brandId } : {}),
+      ...(headers.campaignId ? { "x-campaign-id": headers.campaignId } : {}),
+    },
+    body: JSON.stringify({
+      message: `Extract author names and publication date from this article:\n\n${truncated}`,
+      systemPrompt: SYSTEM_PROMPT,
+      responseFormat: "json",
+      maxTokens: 512,
+      temperature: 0,
+    }),
   });
 
-  const raw = response.content[0]?.type === "text" ? response.content[0].text : "";
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Chat-service returned ${res.status}: ${body}`);
+  }
 
-  // Strip markdown code fences (```json ... ``` or ``` ... ```) that the LLM sometimes wraps around the JSON
-  const text = raw.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+  const data = (await res.json()) as ChatCompleteResponse;
 
-  try {
-    const parsed = JSON.parse(text);
-    return {
-      isArticle: parsed.isArticle !== false,
-      authors: Array.isArray(parsed.authors)
-        ? parsed.authors.map((a: { type?: string; firstName?: string; lastName?: string }) => ({
-            type: a.type === "organization" ? "organization" as const : "person" as const,
-            firstName: String(a.firstName ?? ""),
-            lastName: String(a.lastName ?? ""),
-          }))
-        : [],
-      publishedAt: typeof parsed.publishedAt === "string" ? parsed.publishedAt : null,
-    };
-  } catch {
-    console.error("[Articles Service] Failed to parse LLM extraction response:", text);
+  // Use the pre-parsed `json` field from chat-service (already fence-stripped and parsed)
+  const parsed = data.json;
+  if (!parsed) {
+    console.error("[Articles Service] Chat-service returned no parsed JSON, raw content:", data.content);
     return { isArticle: false, authors: [], publishedAt: null };
   }
+
+  return {
+    isArticle: parsed.isArticle !== false,
+    authors: Array.isArray(parsed.authors)
+      ? (parsed.authors as { type?: string; firstName?: string; lastName?: string }[]).map((a) => ({
+          type: a.type === "organization" ? "organization" as const : "person" as const,
+          firstName: String(a.firstName ?? ""),
+          lastName: String(a.lastName ?? ""),
+        }))
+      : [],
+    publishedAt: typeof parsed.publishedAt === "string" ? parsed.publishedAt : null,
+  };
 }
