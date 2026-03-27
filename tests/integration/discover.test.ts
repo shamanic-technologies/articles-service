@@ -1,15 +1,16 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import request from "supertest";
-import { createTestApp, getAuthHeaders, TEST_ORG_ID, TEST_USER_ID, TEST_RUN_ID, TEST_BRAND_ID, TEST_CAMPAIGN_ID, TEST_FEATURE_SLUG } from "../helpers/test-app.js";
+import { createTestApp, getAuthHeaders, TEST_ORG_ID, TEST_USER_ID, TEST_RUN_ID, TEST_BRAND_ID, TEST_CAMPAIGN_ID, TEST_FEATURE_SLUG, TEST_WORKFLOW_NAME } from "../helpers/test-app.js";
 import { cleanTestData, closeDb } from "../helpers/test-db.js";
 import { db } from "../../src/db/index.js";
 import { articles, articleDiscoveries } from "../../src/db/schema.js";
 import { eq } from "drizzle-orm";
 
 // Mock external services
-vi.mock("../../src/services/google.js", () => ({
-  searchNews: vi.fn(),
-}));
+vi.mock("../../src/services/google.js", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../../src/services/google.js")>();
+  return { ...original, searchNews: vi.fn() };
+});
 
 vi.mock("../../src/services/scraping.js", () => ({
   extractArticles: vi.fn(),
@@ -58,7 +59,7 @@ describe("POST /v1/discover/outlet-articles", () => {
     const res = await request(app)
       .post("/v1/discover/outlet-articles")
       .set(getAuthHeaders())
-      .send({ outletDomain: "techcrunch.com", brandId: TEST_BRAND_ID, campaignId: TEST_CAMPAIGN_ID, maxArticles: 10 });
+      .send({ outletDomain: "techcrunch.com", maxArticles: 10 });
 
     expect(res.status).toBe(200);
     expect(res.body.articles).toHaveLength(2);
@@ -96,7 +97,7 @@ describe("POST /v1/discover/outlet-articles", () => {
     const res = await request(app)
       .post("/v1/discover/outlet-articles")
       .set(getAuthHeaders())
-      .send({ outletDomain: "unknown-outlet.com", brandId: TEST_BRAND_ID, campaignId: TEST_CAMPAIGN_ID });
+      .send({ outletDomain: "unknown-outlet.com" });
 
     expect(res.status).toBe(200);
     expect(res.body.articles).toEqual([]);
@@ -126,7 +127,7 @@ describe("POST /v1/discover/outlet-articles", () => {
     const res = await request(app)
       .post("/v1/discover/outlet-articles")
       .set(getAuthHeaders())
-      .send({ outletDomain: "example.com", brandId: TEST_BRAND_ID, campaignId: TEST_CAMPAIGN_ID });
+      .send({ outletDomain: "example.com" });
 
     expect(res.status).toBe(200);
     expect(res.body.articles).toHaveLength(1);
@@ -142,13 +143,30 @@ describe("POST /v1/discover/outlet-articles", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 400 for missing brandId", async () => {
+  it("returns 400 when x-brand-id header is missing", async () => {
+    const headers = { ...getAuthHeaders() };
+    delete (headers as Record<string, string>)["x-brand-id"];
+
     const res = await request(app)
       .post("/v1/discover/outlet-articles")
-      .set(getAuthHeaders())
-      .send({ outletDomain: "techcrunch.com", campaignId: TEST_CAMPAIGN_ID });
+      .set(headers)
+      .send({ outletDomain: "techcrunch.com" });
 
     expect(res.status).toBe(400);
+    expect(res.body.error).toContain("x-brand-id");
+  });
+
+  it("returns 400 when x-campaign-id header is missing", async () => {
+    const headers = { ...getAuthHeaders() };
+    delete (headers as Record<string, string>)["x-campaign-id"];
+
+    const res = await request(app)
+      .post("/v1/discover/outlet-articles")
+      .set(headers)
+      .send({ outletDomain: "techcrunch.com" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("x-campaign-id");
   });
 
   it("returns 502 when Google service fails", async () => {
@@ -157,7 +175,7 @@ describe("POST /v1/discover/outlet-articles", () => {
     const res = await request(app)
       .post("/v1/discover/outlet-articles")
       .set(getAuthHeaders())
-      .send({ outletDomain: "techcrunch.com", brandId: TEST_BRAND_ID, campaignId: TEST_CAMPAIGN_ID });
+      .send({ outletDomain: "techcrunch.com" });
 
     expect(res.status).toBe(502);
     expect(res.body.error).toContain("Google news search failed");
@@ -169,46 +187,31 @@ describe("POST /v1/discover/outlet-articles", () => {
     await request(app)
       .post("/v1/discover/outlet-articles")
       .set(getAuthHeaders())
-      .send({ outletDomain: "techcrunch.com", brandId: TEST_BRAND_ID, campaignId: TEST_CAMPAIGN_ID });
+      .send({ outletDomain: "techcrunch.com" });
 
     expect(mockSearchNews).toHaveBeenCalledWith("site:techcrunch.com", 10, expect.anything());
   });
 
-  it("forwards x-campaign-id to downstream services", async () => {
+  it("forwards all identity headers to downstream services", async () => {
     mockSearchNews.mockResolvedValue([]);
 
     await request(app)
       .post("/v1/discover/outlet-articles")
       .set(getAuthHeaders())
-      .send({ outletDomain: "techcrunch.com", brandId: TEST_BRAND_ID, campaignId: TEST_CAMPAIGN_ID });
+      .send({ outletDomain: "techcrunch.com" });
 
     expect(mockSearchNews).toHaveBeenCalledWith(
       "site:techcrunch.com",
       10,
-      expect.objectContaining({ campaignId: TEST_CAMPAIGN_ID }),
-    );
-  });
-
-  it("uses body campaignId for downstream calls when x-campaign-id header is absent", async () => {
-    mockSearchNews.mockResolvedValue([]);
-
-    const headersWithoutCampaign = {
-      "X-API-Key": "test-api-key",
-      "Content-Type": "application/json",
-      "x-org-id": TEST_ORG_ID,
-      "x-user-id": TEST_USER_ID,
-      "x-run-id": TEST_RUN_ID,
-    };
-
-    await request(app)
-      .post("/v1/discover/outlet-articles")
-      .set(headersWithoutCampaign)
-      .send({ outletDomain: "techcrunch.com", brandId: TEST_BRAND_ID, campaignId: TEST_CAMPAIGN_ID });
-
-    expect(mockSearchNews).toHaveBeenCalledWith(
-      "site:techcrunch.com",
-      10,
-      expect.objectContaining({ campaignId: TEST_CAMPAIGN_ID }),
+      expect.objectContaining({
+        orgId: TEST_ORG_ID,
+        userId: TEST_USER_ID,
+        runId: TEST_RUN_ID,
+        workflowName: TEST_WORKFLOW_NAME,
+        featureSlug: TEST_FEATURE_SLUG,
+        brandId: TEST_BRAND_ID,
+        campaignId: TEST_CAMPAIGN_ID,
+      }),
     );
   });
 });
@@ -244,8 +247,6 @@ describe("POST /v1/discover/journalist-publications", () => {
         journalistFirstName: "Sarah",
         journalistLastName: "Perez",
         journalistId,
-        brandId: TEST_BRAND_ID,
-        campaignId: TEST_CAMPAIGN_ID,
       });
 
     expect(res.status).toBe(200);
@@ -278,8 +279,6 @@ describe("POST /v1/discover/journalist-publications", () => {
         journalistFirstName: "Unknown",
         journalistLastName: "Person",
         journalistId,
-        brandId: TEST_BRAND_ID,
-        campaignId: TEST_CAMPAIGN_ID,
       });
 
     expect(res.status).toBe(200);
@@ -295,6 +294,32 @@ describe("POST /v1/discover/journalist-publications", () => {
     expect(res.status).toBe(400);
   });
 
+  it("returns 400 when x-brand-id header is missing", async () => {
+    const headers = { ...getAuthHeaders() };
+    delete (headers as Record<string, string>)["x-brand-id"];
+
+    const res = await request(app)
+      .post("/v1/discover/journalist-publications")
+      .set(headers)
+      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("x-brand-id");
+  });
+
+  it("returns 400 when x-campaign-id header is missing", async () => {
+    const headers = { ...getAuthHeaders() };
+    delete (headers as Record<string, string>)["x-campaign-id"];
+
+    const res = await request(app)
+      .post("/v1/discover/journalist-publications")
+      .set(headers)
+      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("x-campaign-id");
+  });
+
   it("respects custom maxResults", async () => {
     mockSearchNews.mockResolvedValue([]);
 
@@ -305,40 +330,32 @@ describe("POST /v1/discover/journalist-publications", () => {
         journalistFirstName: "Sarah",
         journalistLastName: "Perez",
         journalistId,
-        brandId: TEST_BRAND_ID,
-        campaignId: TEST_CAMPAIGN_ID,
         maxResults: 5,
       });
 
     expect(mockSearchNews).toHaveBeenCalledWith('"Sarah Perez"', 5, expect.anything());
   });
 
-  it("uses body campaignId for downstream calls when x-campaign-id header is absent", async () => {
+  it("forwards all identity headers to downstream services", async () => {
     mockSearchNews.mockResolvedValue([]);
-
-    const headersWithoutCampaign = {
-      "X-API-Key": "test-api-key",
-      "Content-Type": "application/json",
-      "x-org-id": TEST_ORG_ID,
-      "x-user-id": TEST_USER_ID,
-      "x-run-id": TEST_RUN_ID,
-    };
 
     await request(app)
       .post("/v1/discover/journalist-publications")
-      .set(headersWithoutCampaign)
-      .send({
-        journalistFirstName: "Sarah",
-        journalistLastName: "Perez",
-        journalistId,
-        brandId: TEST_BRAND_ID,
-        campaignId: TEST_CAMPAIGN_ID,
-      });
+      .set(getAuthHeaders())
+      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId });
 
     expect(mockSearchNews).toHaveBeenCalledWith(
       '"Sarah Perez"',
       10,
-      expect.objectContaining({ campaignId: TEST_CAMPAIGN_ID }),
+      expect.objectContaining({
+        orgId: TEST_ORG_ID,
+        userId: TEST_USER_ID,
+        runId: TEST_RUN_ID,
+        workflowName: TEST_WORKFLOW_NAME,
+        featureSlug: TEST_FEATURE_SLUG,
+        brandId: TEST_BRAND_ID,
+        campaignId: TEST_CAMPAIGN_ID,
+      }),
     );
   });
 
@@ -360,23 +377,16 @@ describe("POST /v1/discover/journalist-publications", () => {
       journalistFirstName: "Sarah",
       journalistLastName: "Perez",
       journalistId,
-      brandId: TEST_BRAND_ID,
-      campaignId: TEST_CAMPAIGN_ID,
     };
 
     // Call twice
     await request(app).post("/v1/discover/journalist-publications").set(getAuthHeaders()).send(body);
     await request(app).post("/v1/discover/journalist-publications").set(getAuthHeaders()).send(body);
 
-    // Should still have only 1 discovery (onConflictDoNothing)
     const discoveries = await db
       .select()
       .from(articleDiscoveries)
       .where(eq(articleDiscoveries.journalistId, journalistId));
-    // May have 2 because there's no unique constraint preventing duplicates in this case
-    // The onConflictDoNothing only works if there's a unique constraint hit
-    // Since each insert gets a new random UUID as PK, both will succeed
-    // This is OK — we track each discovery event
     expect(discoveries.length).toBeGreaterThanOrEqual(1);
   });
 });
