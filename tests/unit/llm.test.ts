@@ -201,4 +201,17 @@ describe("extractMetadataFromMarkdown", () => {
     await expect(extractMetadataFromMarkdown("# Article", TEST_HEADERS))
       .rejects.toThrow("KEY_SERVICE_URL and KEY_SERVICE_API_KEY must be set");
   });
+
+  it("skips key-service call when anthropicKey is pre-resolved (regression: concurrent key-service race)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [{ type: "text", text: '{"isArticle":true,"authors":[],"publishedAt":null}' }],
+    });
+
+    const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
+    await extractMetadataFromMarkdown("# Article", TEST_HEADERS, "pre-resolved-key");
+
+    // fetch should NOT have been called — key was passed directly
+    const fetchMock = vi.mocked(fetch);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });
