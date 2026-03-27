@@ -21,11 +21,7 @@ describe("POST /v1/discoveries", () => {
     const res = await request(app)
       .post("/v1/discoveries")
       .set(getAuthHeaders())
-      .send({
-        articleId: article.id,
-        brandId: TEST_BRAND_ID,
-        campaignId: TEST_CAMPAIGN_ID,
-      });
+      .send({ articleId: article.id });
 
     expect(res.status).toBe(200);
     expect(res.body.articleId).toBe(article.id);
@@ -44,13 +40,7 @@ describe("POST /v1/discoveries", () => {
     const res = await request(app)
       .post("/v1/discoveries")
       .set(getAuthHeaders())
-      .send({
-        articleId: article.id,
-        brandId: TEST_BRAND_ID,
-        campaignId: TEST_CAMPAIGN_ID,
-        outletId,
-        journalistId,
-      });
+      .send({ articleId: article.id, outletId, journalistId });
 
     expect(res.status).toBe(200);
     expect(res.body.outletId).toBe(outletId);
@@ -61,11 +51,7 @@ describe("POST /v1/discoveries", () => {
     const res = await request(app)
       .post("/v1/discoveries")
       .set(getIdentityHeaders())
-      .send({
-        articleId: "550e8400-e29b-41d4-a716-446655440000",
-        brandId: TEST_BRAND_ID,
-        campaignId: TEST_CAMPAIGN_ID,
-      });
+      .send({ articleId: "550e8400-e29b-41d4-a716-446655440000" });
 
     expect(res.status).toBe(401);
   });
@@ -77,6 +63,34 @@ describe("POST /v1/discoveries", () => {
       .send({});
 
     expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when x-brand-id header is missing", async () => {
+    const article = await insertTestArticle({ articleUrl: "https://example.com/1" });
+    const headers = { ...getAuthHeaders() };
+    delete (headers as Record<string, string>)["x-brand-id"];
+
+    const res = await request(app)
+      .post("/v1/discoveries")
+      .set(headers)
+      .send({ articleId: article.id });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("x-brand-id");
+  });
+
+  it("returns 400 when x-campaign-id header is missing", async () => {
+    const article = await insertTestArticle({ articleUrl: "https://example.com/1" });
+    const headers = { ...getAuthHeaders() };
+    delete (headers as Record<string, string>)["x-campaign-id"];
+
+    const res = await request(app)
+      .post("/v1/discoveries")
+      .set(headers)
+      .send({ articleId: article.id });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("x-campaign-id");
   });
 });
 
@@ -90,13 +104,15 @@ describe("POST /v1/discoveries/bulk", () => {
       .set(getAuthHeaders())
       .send({
         discoveries: [
-          { articleId: article1.id, brandId: TEST_BRAND_ID, campaignId: TEST_CAMPAIGN_ID },
-          { articleId: article2.id, brandId: TEST_BRAND_ID, campaignId: TEST_CAMPAIGN_ID },
+          { articleId: article1.id },
+          { articleId: article2.id },
         ],
       });
 
     expect(res.status).toBe(200);
     expect(res.body.discoveries).toHaveLength(2);
+    expect(res.body.discoveries[0].brandId).toBe(TEST_BRAND_ID);
+    expect(res.body.discoveries[0].campaignId).toBe(TEST_CAMPAIGN_ID);
   });
 
   it("handles empty array", async () => {
@@ -107,6 +123,20 @@ describe("POST /v1/discoveries/bulk", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.discoveries).toHaveLength(0);
+  });
+
+  it("returns 400 when x-brand-id header is missing", async () => {
+    const article = await insertTestArticle({ articleUrl: "https://example.com/1" });
+    const headers = { ...getAuthHeaders() };
+    delete (headers as Record<string, string>)["x-brand-id"];
+
+    const res = await request(app)
+      .post("/v1/discoveries/bulk")
+      .set(headers)
+      .send({ discoveries: [{ articleId: article.id }] });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("x-brand-id");
   });
 });
 

@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { articles, articleDiscoveries } from "../db/schema.js";
 import { requireApiKey } from "../middleware/auth.js";
-import { searchNews } from "../services/google.js";
+import { searchNews, type IdentityHeaders } from "../services/google.js";
 import { extractArticles, type ExtractResultSuccess } from "../services/scraping.js";
 import {
   DiscoverOutletArticlesBodySchema,
@@ -11,6 +11,18 @@ import {
 } from "../schemas.js";
 
 const router = Router();
+
+function getIdentityHeaders(req: import("express").Request): IdentityHeaders {
+  return {
+    orgId: req.headers["x-org-id"] as string,
+    userId: req.headers["x-user-id"] as string,
+    runId: req.headers["x-run-id"] as string,
+    workflowName: req.headers["x-workflow-name"] as string | undefined,
+    featureSlug: req.headers["x-feature-slug"] as string | undefined,
+    brandId: req.headers["x-brand-id"] as string | undefined,
+    campaignId: req.headers["x-campaign-id"] as string | undefined,
+  };
+}
 
 // POST /v1/discover/outlet-articles
 // Finds recent articles from an outlet via Google News, extracts authors via scraping service
@@ -22,14 +34,15 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
       return;
     }
 
-    const { outletDomain, brandId, campaignId, maxArticles } = parsed.data;
-    const identityHeaders = {
-      orgId: req.headers["x-org-id"] as string,
-      userId: req.headers["x-user-id"] as string,
-      runId: req.headers["x-run-id"] as string,
-      featureSlug: req.headers["x-feature-slug"] as string | undefined,
-      campaignId: (req.headers["x-campaign-id"] as string | undefined) ?? campaignId,
-    };
+    const identityHeaders = getIdentityHeaders(req);
+    const { brandId, campaignId } = identityHeaders;
+
+    if (!brandId || !campaignId) {
+      res.status(400).json({ error: "x-brand-id and x-campaign-id headers are required" });
+      return;
+    }
+
+    const { outletDomain, maxArticles } = parsed.data;
 
     // Step 1: Search Google News for articles from this outlet
     const newsResults = await searchNews(
@@ -142,14 +155,15 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
       return;
     }
 
-    const { journalistFirstName, journalistLastName, journalistId, brandId, campaignId, maxResults } = parsed.data;
-    const identityHeaders = {
-      orgId: req.headers["x-org-id"] as string,
-      userId: req.headers["x-user-id"] as string,
-      runId: req.headers["x-run-id"] as string,
-      featureSlug: req.headers["x-feature-slug"] as string | undefined,
-      campaignId: (req.headers["x-campaign-id"] as string | undefined) ?? campaignId,
-    };
+    const identityHeaders = getIdentityHeaders(req);
+    const { brandId, campaignId } = identityHeaders;
+
+    if (!brandId || !campaignId) {
+      res.status(400).json({ error: "x-brand-id and x-campaign-id headers are required" });
+      return;
+    }
+
+    const { journalistFirstName, journalistLastName, journalistId, maxResults } = parsed.data;
 
     // Step 1: Search Google News for this journalist's articles
     const query = `"${journalistFirstName} ${journalistLastName}"`;

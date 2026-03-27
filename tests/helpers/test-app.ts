@@ -21,6 +21,7 @@ export const TEST_RUN_ID = "c0000000-0000-0000-0000-000000000001";
 export const TEST_FEATURE_SLUG = "test-feature";
 export const TEST_BRAND_ID = "e0000000-0000-4000-8000-000000000001";
 export const TEST_CAMPAIGN_ID = "f0000000-0000-4000-8000-000000000001";
+export const TEST_WORKFLOW_NAME = "test-workflow";
 
 export function createTestApp() {
   const app = express();
@@ -51,7 +52,9 @@ export function getIdentityHeaders() {
     "x-org-id": TEST_ORG_ID,
     "x-user-id": TEST_USER_ID,
     "x-run-id": TEST_RUN_ID,
+    "x-workflow-name": TEST_WORKFLOW_NAME,
     "x-feature-slug": TEST_FEATURE_SLUG,
+    "x-brand-id": TEST_BRAND_ID,
     "x-campaign-id": TEST_CAMPAIGN_ID,
   };
 }
@@ -63,7 +66,9 @@ export function getAuthHeaders() {
     "x-org-id": TEST_ORG_ID,
     "x-user-id": TEST_USER_ID,
     "x-run-id": TEST_RUN_ID,
+    "x-workflow-name": TEST_WORKFLOW_NAME,
     "x-feature-slug": TEST_FEATURE_SLUG,
+    "x-brand-id": TEST_BRAND_ID,
     "x-campaign-id": TEST_CAMPAIGN_ID,
   };
 }

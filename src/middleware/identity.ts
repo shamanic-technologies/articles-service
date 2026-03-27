@@ -37,5 +37,21 @@ export function requireIdentity(req: Request, res: Response, next: NextFunction)
     return;
   }
 
+  const brandId = req.headers["x-brand-id"] as string | undefined;
+  if (brandId !== undefined && !UUID_REGEX.test(brandId)) {
+    res.status(400).json({
+      error: "x-brand-id must be a valid UUID when provided",
+    });
+    return;
+  }
+
+  const workflowName = req.headers["x-workflow-name"] as string | undefined;
+  if (workflowName !== undefined && (typeof workflowName !== "string" || workflowName.trim() === "")) {
+    res.status(400).json({
+      error: "x-workflow-name must be a non-empty string when provided",
+    });
+    return;
+  }
+
   next();
 }
