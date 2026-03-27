@@ -40,7 +40,7 @@ describe("extractMetadataFromMarkdown", () => {
     const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
     await extractMetadataFromMarkdown("# Article\nBy Sarah Perez", TEST_HEADERS);
 
-    // Verify key-service was called
+    // Verify key-service was called with correct caller headers
     const fetchMock = vi.mocked(fetch);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://key-service:3000/keys/anthropic/decrypt",
@@ -51,9 +51,29 @@ describe("extractMetadataFromMarkdown", () => {
           "x-org-id": TEST_HEADERS.orgId,
           "x-user-id": TEST_HEADERS.userId,
           "x-run-id": TEST_HEADERS.runId,
+          "X-Caller-Service": "articles-service",
+          "X-Caller-Method": "GET",
+          "X-Caller-Path": "/keys/anthropic/decrypt",
         }),
       }),
     );
+  });
+
+  it("sends X-Caller-Method and X-Caller-Path headers to key-service (regression)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [{ type: "text", text: '{"isArticle":true,"authors":[],"publishedAt":null}' }],
+    });
+
+    const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
+    await extractMetadataFromMarkdown("# Test", TEST_HEADERS);
+
+    const fetchMock = vi.mocked(fetch);
+    const calledHeaders = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+    // Must NOT send the old X-Caller-Endpoint header
+    expect(calledHeaders).not.toHaveProperty("X-Caller-Endpoint");
+    // Must send the required X-Caller-Method and X-Caller-Path
+    expect(calledHeaders["X-Caller-Method"]).toBe("GET");
+    expect(calledHeaders["X-Caller-Path"]).toBe("/keys/anthropic/decrypt");
   });
 
   it("extracts person authors and publishedAt", async () => {
