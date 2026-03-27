@@ -170,7 +170,7 @@ export async function extractArticles(
       }
 
       try {
-        const metadata = await extractMetadataFromMarkdown(markdown);
+        const metadata = await extractMetadataFromMarkdown(markdown, headers);
         if (!metadata.isArticle) {
           results.push({ url, success: false, error: "Page is not a press article" });
           return;
