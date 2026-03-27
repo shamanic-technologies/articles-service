@@ -18,6 +18,7 @@ export const articles = pgTable(
     articleAuthor: text("article_author"),
     twitterDescription: text("twitter_description"),
     articleModified: text("article_modified"),
+    extractedAt: timestamp("extracted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

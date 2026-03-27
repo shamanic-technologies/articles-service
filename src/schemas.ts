@@ -163,8 +163,9 @@ export const DiscoverJournalistPublicationsBodySchema = z
 
 export const ExtractedAuthorSchema = z
   .object({
-    firstName: z.string(),
-    lastName: z.string(),
+    type: z.enum(["person", "organization"]).openapi({ description: "Whether this author is a person or an organization (news agency, editorial team, etc.)" }),
+    firstName: z.string().openapi({ description: "First name (empty for organizations or single-name authors)" }),
+    lastName: z.string().openapi({ description: "Last name, or full name for organizations" }),
   })
   .openapi("ExtractedAuthor");
 

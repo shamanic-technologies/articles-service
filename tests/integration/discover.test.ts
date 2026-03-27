@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import request from "supertest";
 import { createTestApp, getAuthHeaders, TEST_ORG_ID, TEST_USER_ID, TEST_RUN_ID, TEST_BRAND_ID, TEST_CAMPAIGN_ID, TEST_FEATURE_SLUG, TEST_WORKFLOW_NAME } from "../helpers/test-app.js";
-import { cleanTestData, closeDb } from "../helpers/test-db.js";
+import { cleanTestData, closeDb, insertTestArticle } from "../helpers/test-db.js";
 import { db } from "../../src/db/index.js";
 import { articles, articleDiscoveries } from "../../src/db/schema.js";
 import { eq } from "drizzle-orm";
@@ -12,9 +12,10 @@ vi.mock("../../src/services/google.js", async (importOriginal) => {
   return { ...original, searchNews: vi.fn() };
 });
 
-vi.mock("../../src/services/scraping.js", () => ({
-  extractArticles: vi.fn(),
-}));
+vi.mock("../../src/services/scraping.js", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../../src/services/scraping.js")>();
+  return { ...original, extractArticles: vi.fn() };
+});
 
 import { searchNews } from "../../src/services/google.js";
 import { extractArticles } from "../../src/services/scraping.js";
@@ -45,13 +46,13 @@ describe("POST /v1/discover/outlet-articles", () => {
       {
         url: "https://techcrunch.com/2025/article-1",
         success: true,
-        authors: [{ firstName: "Sarah", lastName: "Perez" }],
+        authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-20T00:00:00Z",
       },
       {
         url: "https://techcrunch.com/2025/article-2",
         success: true,
-        authors: [{ firstName: "John", lastName: "Doe" }, { firstName: "Jane", lastName: "Smith" }],
+        authors: [{ type: "person", firstName: "John", lastName: "Doe" }, { type: "person", firstName: "Jane", lastName: "Smith" }],
         publishedAt: "2025-03-18T00:00:00Z",
       },
     ]);
@@ -65,7 +66,7 @@ describe("POST /v1/discover/outlet-articles", () => {
     expect(res.body.articles).toHaveLength(2);
 
     expect(res.body.articles[0].articleUrl).toBe("https://techcrunch.com/2025/article-1");
-    expect(res.body.articles[0].authors).toEqual([{ firstName: "Sarah", lastName: "Perez" }]);
+    expect(res.body.articles[0].authors).toEqual([{ type: "person", firstName: "Sarah", lastName: "Perez" }]);
     expect(res.body.articles[0].publishedAt).toBe("2025-03-20T00:00:00Z");
     expect(res.body.articles[0].articleId).toBeDefined();
 
@@ -74,6 +75,9 @@ describe("POST /v1/discover/outlet-articles", () => {
     // Verify articles were stored in DB
     const stored = await db.select().from(articles);
     expect(stored).toHaveLength(2);
+
+    // Verify extractedAt was set
+    expect(stored[0].extractedAt).toBeTruthy();
 
     // Verify discovery records were created
     const discoveries = await db.select().from(articleDiscoveries);
@@ -114,7 +118,7 @@ describe("POST /v1/discover/outlet-articles", () => {
       {
         url: "https://example.com/good",
         success: true,
-        authors: [{ firstName: "Alice", lastName: "Johnson" }],
+        authors: [{ type: "person", firstName: "Alice", lastName: "Johnson" }],
         publishedAt: "2025-03-20T00:00:00Z",
       },
       {
@@ -229,13 +233,13 @@ describe("POST /v1/discover/journalist-publications", () => {
       {
         url: "https://wired.com/tech-trends",
         success: true,
-        authors: [{ firstName: "Sarah", lastName: "Perez" }],
+        authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-15T00:00:00Z",
       },
       {
         url: "https://nytimes.com/ai-revolution",
         success: true,
-        authors: [{ firstName: "Sarah", lastName: "Perez" }],
+        authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-10T00:00:00Z",
       },
     ]);
@@ -368,7 +372,7 @@ describe("POST /v1/discover/journalist-publications", () => {
       {
         url: "https://example.com/article-1",
         success: true,
-        authors: [{ firstName: "Sarah", lastName: "Perez" }],
+        authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-20T00:00:00Z",
       },
     ]);

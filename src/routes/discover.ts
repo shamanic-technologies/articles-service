@@ -4,7 +4,7 @@ import { db } from "../db/index.js";
 import { articles, articleDiscoveries } from "../db/schema.js";
 import { requireApiKey } from "../middleware/auth.js";
 import { searchNews, type IdentityHeaders } from "../services/google.js";
-import { extractArticles, type ExtractResultSuccess } from "../services/scraping.js";
+import { extractArticles, serializeAuthors, type ExtractResultSuccess } from "../services/scraping.js";
 import {
   DiscoverOutletArticlesBodySchema,
   DiscoverJournalistPublicationsBodySchema,
@@ -58,14 +58,11 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
 
     const urls = newsResults.map((r) => r.link);
 
-    // Step 2: Extract authors + publishedAt via scraping service (batches of 10)
+    // Step 2: Extract authors + publishedAt via scrape+Haiku (with DB cache)
     const allExtractResults: ExtractResultSuccess[] = [];
-    for (let i = 0; i < urls.length; i += 10) {
-      const batch = urls.slice(i, i + 10);
-      const results = await extractArticles(batch, identityHeaders);
-      for (const r of results) {
-        if (r.success) allExtractResults.push(r);
-      }
+    const results = await extractArticles(urls, identityHeaders);
+    for (const r of results) {
+      if (r.success) allExtractResults.push(r);
     }
 
     if (allExtractResults.length === 0) {
@@ -83,7 +80,8 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
         snippet: news?.snippet ?? null,
         ogDescription: null,
         articlePublished: ext.publishedAt ?? null,
-        author: ext.authors.map((a) => `${a.firstName} ${a.lastName}`).join(", ") || null,
+        author: ext.authors.length > 0 ? serializeAuthors(ext.authors) : null,
+        extractedAt: new Date(),
       };
     });
 
@@ -98,6 +96,7 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
           ogDescription: sql`EXCLUDED.og_description`,
           articlePublished: sql`EXCLUDED.article_published`,
           author: sql`EXCLUDED.author`,
+          extractedAt: sql`EXCLUDED.extracted_at`,
           updatedAt: new Date(),
         },
       })
@@ -176,14 +175,11 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
 
     const urls = newsResults.map((r) => r.link);
 
-    // Step 2: Extract authors + publishedAt via scraping service
+    // Step 2: Extract authors + publishedAt via scrape+Haiku (with DB cache)
     const allExtractResults: ExtractResultSuccess[] = [];
-    for (let i = 0; i < urls.length; i += 10) {
-      const batch = urls.slice(i, i + 10);
-      const results = await extractArticles(batch, identityHeaders);
-      for (const r of results) {
-        if (r.success) allExtractResults.push(r);
-      }
+    const results = await extractArticles(urls, identityHeaders);
+    for (const r of results) {
+      if (r.success) allExtractResults.push(r);
     }
 
     if (allExtractResults.length === 0) {
@@ -201,7 +197,8 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
         snippet: news?.snippet ?? null,
         ogDescription: null,
         articlePublished: ext.publishedAt ?? null,
-        author: ext.authors.map((a) => `${a.firstName} ${a.lastName}`).join(", ") || null,
+        author: ext.authors.length > 0 ? serializeAuthors(ext.authors) : null,
+        extractedAt: new Date(),
       };
     });
 
@@ -216,6 +213,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
           ogDescription: sql`EXCLUDED.og_description`,
           articlePublished: sql`EXCLUDED.article_published`,
           author: sql`EXCLUDED.author`,
+          extractedAt: sql`EXCLUDED.extracted_at`,
           updatedAt: new Date(),
         },
       })
