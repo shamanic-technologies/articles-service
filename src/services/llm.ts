@@ -83,6 +83,7 @@ export async function extractMetadataFromMarkdown(
       message: `Extract author names and publication date from this article:\n\n${truncated}`,
       systemPrompt: SYSTEM_PROMPT,
       responseFormat: "json",
+      model: "claude-haiku-4-5",
       maxTokens: 512,
       temperature: 0,
     }),

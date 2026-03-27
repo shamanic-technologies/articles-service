@@ -49,9 +49,10 @@ describe("extractMetadataFromMarkdown", () => {
       }),
     );
 
-    // Verify body includes responseFormat: "json"
+    // Verify body includes responseFormat: "json" and model: "claude-haiku-4-5"
     const body = JSON.parse(fetchMock.mock.calls[0][1]?.body as string);
     expect(body.responseFormat).toBe("json");
+    expect(body.model).toBe("claude-haiku-4-5");
     expect(body.systemPrompt).toBeDefined();
     expect(body.maxTokens).toBe(512);
   });
