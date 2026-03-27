@@ -17,16 +17,23 @@ router.post("/v1/discoveries", requireApiKey, async (req, res) => {
     }
 
     const orgId = req.headers["x-org-id"] as string;
+    const brandId = req.headers["x-brand-id"] as string | undefined;
+    const campaignId = req.headers["x-campaign-id"] as string | undefined;
     const featureSlug = req.headers["x-feature-slug"] as string | undefined;
+
+    if (!brandId || !campaignId) {
+      res.status(400).json({ error: "x-brand-id and x-campaign-id headers are required" });
+      return;
+    }
 
     const [discovery] = await db
       .insert(articleDiscoveries)
       .values({
         articleId: parsed.data.articleId,
         orgId,
-        brandId: parsed.data.brandId,
+        brandId,
         featureSlug: featureSlug ?? "unknown",
-        campaignId: parsed.data.campaignId,
+        campaignId,
         outletId: parsed.data.outletId ?? null,
         journalistId: parsed.data.journalistId ?? null,
         topicId: parsed.data.topicId ?? null,
@@ -55,14 +62,21 @@ router.post("/v1/discoveries/bulk", requireApiKey, async (req, res) => {
     }
 
     const orgId = req.headers["x-org-id"] as string;
+    const brandId = req.headers["x-brand-id"] as string | undefined;
+    const campaignId = req.headers["x-campaign-id"] as string | undefined;
     const featureSlug = req.headers["x-feature-slug"] as string | undefined;
+
+    if (!brandId || !campaignId) {
+      res.status(400).json({ error: "x-brand-id and x-campaign-id headers are required" });
+      return;
+    }
 
     const values = parsed.data.discoveries.map((d) => ({
       articleId: d.articleId,
       orgId,
-      brandId: d.brandId,
+      brandId,
       featureSlug: featureSlug ?? "unknown",
-      campaignId: d.campaignId,
+      campaignId,
       outletId: d.outletId ?? null,
       journalistId: d.journalistId ?? null,
       topicId: d.topicId ?? null,

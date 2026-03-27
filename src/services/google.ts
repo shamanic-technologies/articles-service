@@ -11,10 +11,20 @@ interface NewsSearchResponse {
   results: NewsResult[];
 }
 
+export interface IdentityHeaders {
+  orgId: string;
+  userId: string;
+  runId: string;
+  workflowName?: string;
+  featureSlug?: string;
+  brandId?: string;
+  campaignId?: string;
+}
+
 export async function searchNews(
   query: string,
   num: number,
-  headers: { orgId: string; userId: string; runId: string; featureSlug?: string; campaignId?: string },
+  headers: IdentityHeaders,
 ): Promise<NewsResult[]> {
   const baseUrl = process.env.GOOGLE_SERVICE_URL;
   const apiKey = process.env.GOOGLE_SERVICE_API_KEY;
@@ -30,7 +40,9 @@ export async function searchNews(
       "x-org-id": headers.orgId,
       "x-user-id": headers.userId,
       "x-run-id": headers.runId,
+      ...(headers.workflowName ? { "x-workflow-name": headers.workflowName } : {}),
       ...(headers.featureSlug ? { "x-feature-slug": headers.featureSlug } : {}),
+      ...(headers.brandId ? { "x-brand-id": headers.brandId } : {}),
       ...(headers.campaignId ? { "x-campaign-id": headers.campaignId } : {}),
     },
     body: JSON.stringify({ query, num }),

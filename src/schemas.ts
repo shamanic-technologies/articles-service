@@ -125,8 +125,6 @@ export const BulkCreateTopicsBodySchema = z
 export const CreateDiscoveryBodySchema = z
   .object({
     articleId: z.string().uuid(),
-    brandId: z.string().uuid(),
-    campaignId: z.string().uuid(),
     outletId: z.string().uuid().optional(),
     journalistId: z.string().uuid().optional(),
     topicId: z.string().uuid().optional(),
@@ -150,8 +148,6 @@ export const SearchArticlesBodySchema = z
 export const DiscoverOutletArticlesBodySchema = z
   .object({
     outletDomain: z.string().min(1).openapi({ description: "Domain of the outlet (e.g. techcrunch.com)", example: "techcrunch.com" }),
-    brandId: z.string().uuid().openapi({ description: "Brand UUID for scoping the discovery" }),
-    campaignId: z.string().uuid().openapi({ description: "Campaign UUID for scoping the discovery" }),
     maxArticles: z.number().int().min(1).max(20).optional().default(10).openapi({ description: "Max articles to discover (default 10)" }),
   })
   .openapi("DiscoverOutletArticlesBody");
@@ -161,8 +157,6 @@ export const DiscoverJournalistPublicationsBodySchema = z
     journalistFirstName: z.string().min(1).openapi({ description: "Journalist first name" }),
     journalistLastName: z.string().min(1).openapi({ description: "Journalist last name" }),
     journalistId: z.string().uuid().openapi({ description: "Journalist UUID for linking" }),
-    brandId: z.string().uuid().openapi({ description: "Brand UUID for scoping the discovery" }),
-    campaignId: z.string().uuid().openapi({ description: "Campaign UUID for scoping the discovery" }),
     maxResults: z.number().int().min(1).max(20).optional().default(10).openapi({ description: "Max publications to find (default 10)" }),
   })
   .openapi("DiscoverJournalistPublicationsBody");
@@ -191,7 +185,9 @@ export const IdentityHeadersSchema = z.object({
   "x-org-id": z.string().uuid().openapi({ description: "Internal org UUID" }),
   "x-user-id": z.string().uuid().openapi({ description: "Internal user UUID" }),
   "x-run-id": z.string().uuid().openapi({ description: "Run UUID from runs-service" }),
+  "x-workflow-name": z.string().optional().openapi({ description: "Workflow name for tracking" }),
   "x-feature-slug": z.string().optional().openapi({ description: "Feature slug for tracking/filtering" }),
+  "x-brand-id": z.string().uuid().optional().openapi({ description: "Brand UUID for scoping" }),
   "x-campaign-id": z.string().uuid().optional().openapi({ description: "Campaign UUID for inter-service propagation" }),
 });
 
