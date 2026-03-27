@@ -13,7 +13,7 @@ export interface LlmExtractResult {
   publishedAt: string | null;
 }
 
-async function resolveAnthropicKey(headers: IdentityHeaders): Promise<string> {
+export async function resolveAnthropicKey(headers: IdentityHeaders): Promise<string> {
   const baseUrl = process.env.KEY_SERVICE_URL;
   const apiKey = process.env.KEY_SERVICE_API_KEY;
   if (!baseUrl || !apiKey) {
@@ -81,9 +81,10 @@ Article content:
 export async function extractMetadataFromMarkdown(
   markdown: string,
   headers: IdentityHeaders,
+  anthropicKey?: string,
 ): Promise<LlmExtractResult> {
-  const anthropicKey = await resolveAnthropicKey(headers);
-  const anthropic = new Anthropic({ apiKey: anthropicKey });
+  const key = anthropicKey ?? await resolveAnthropicKey(headers);
+  const anthropic = new Anthropic({ apiKey: key });
 
   // Truncate very long articles to save tokens — metadata is always near the top
   const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) : markdown;

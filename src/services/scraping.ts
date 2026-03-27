@@ -2,7 +2,7 @@ import { inArray, and, isNotNull, gte } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { articles } from "../db/schema.js";
 import type { IdentityHeaders } from "./google.js";
-import { extractMetadataFromMarkdown, type ExtractedAuthor } from "./llm.js";
+import { extractMetadataFromMarkdown, resolveAnthropicKey, type ExtractedAuthor } from "./llm.js";
 
 export interface ExtractResultSuccess {
   url: string;
@@ -149,6 +149,9 @@ export async function extractArticles(
     `[Articles Service] Cache hit: ${cachedArticles.length}/${urls.length}, extracting ${urlsToExtract.length} new URLs via scrape+Haiku`,
   );
 
+  // Resolve Anthropic key once for the entire batch to avoid concurrent key-service calls
+  const anthropicKey = await resolveAnthropicKey(headers);
+
   // Scrape all URLs in parallel
   const scrapeResults = await Promise.allSettled(
     urlsToExtract.map(async (url) => {
@@ -170,7 +173,7 @@ export async function extractArticles(
       }
 
       try {
-        const metadata = await extractMetadataFromMarkdown(markdown, headers);
+        const metadata = await extractMetadataFromMarkdown(markdown, headers, anthropicKey);
         if (!metadata.isArticle) {
           results.push({ url, success: false, error: "Page is not a press article" });
           return;
