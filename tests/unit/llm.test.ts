@@ -202,6 +202,24 @@ describe("extractMetadataFromMarkdown", () => {
       .rejects.toThrow("KEY_SERVICE_URL and KEY_SERVICE_API_KEY must be set");
   });
 
+  it("strips markdown code fences from LLM response (regression: parse failure)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "text",
+          text: '```json\n{"isArticle":true,"authors":[{"type":"person","firstName":"Perry","lastName":"Steward"}],"publishedAt":"2025-11-05T00:00:00Z"}\n```',
+        },
+      ],
+    });
+
+    const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
+    const result = await extractMetadataFromMarkdown("# Article\nBy Perry Steward", TEST_HEADERS);
+
+    expect(result.isArticle).toBe(true);
+    expect(result.authors).toEqual([{ type: "person", firstName: "Perry", lastName: "Steward" }]);
+    expect(result.publishedAt).toBe("2025-11-05T00:00:00Z");
+  });
+
   it("skips key-service call when anthropicKey is pre-resolved (regression: concurrent key-service race)", async () => {
     mockCreate.mockResolvedValue({
       content: [{ type: "text", text: '{"isArticle":true,"authors":[],"publishedAt":null}' }],
