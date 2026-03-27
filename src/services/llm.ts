@@ -100,10 +100,13 @@ export async function extractMetadataFromMarkdown(
     ],
   });
 
-  const text = response.content[0]?.type === "text" ? response.content[0].text : "";
+  const raw = response.content[0]?.type === "text" ? response.content[0].text : "";
+
+  // Strip markdown code fences (```json ... ``` or ``` ... ```) that the LLM sometimes wraps around the JSON
+  const text = raw.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
 
   try {
-    const parsed = JSON.parse(text.trim());
+    const parsed = JSON.parse(text);
     return {
       isArticle: parsed.isArticle !== false,
       authors: Array.isArray(parsed.authors)
