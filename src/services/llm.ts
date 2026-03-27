@@ -28,7 +28,8 @@ async function resolveAnthropicKey(headers: IdentityHeaders): Promise<string> {
       "x-user-id": headers.userId,
       "x-run-id": headers.runId,
       "X-Caller-Service": "articles-service",
-      "X-Caller-Endpoint": "extractMetadataFromMarkdown",
+      "X-Caller-Method": "GET",
+      "X-Caller-Path": "/keys/anthropic/decrypt",
     },
   });
 
