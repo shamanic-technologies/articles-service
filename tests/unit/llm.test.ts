@@ -8,12 +8,54 @@ vi.mock("@anthropic-ai/sdk", () => ({
   },
 }));
 
+const TEST_HEADERS = {
+  orgId: "a0000000-0000-4000-8000-000000000001",
+  userId: "b0000000-0000-4000-8000-000000000001",
+  runId: "c0000000-0000-4000-8000-000000000001",
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
-  process.env.ANTHROPIC_API_KEY = "test-key";
+  process.env.KEY_SERVICE_URL = "http://key-service:3000";
+  process.env.KEY_SERVICE_API_KEY = "test-key-service-key";
+
+  // Mock fetch for key-service resolution
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve({ key: "test-anthropic-key", keySource: "platform" }),
+  }));
 });
 
 describe("extractMetadataFromMarkdown", () => {
+  it("resolves API key from key-service before calling Anthropic", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "text",
+          text: '{"isArticle":true,"authors":[{"type":"person","firstName":"Sarah","lastName":"Perez"}],"publishedAt":"2025-03-20T00:00:00Z"}',
+        },
+      ],
+    });
+
+    const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
+    await extractMetadataFromMarkdown("# Article\nBy Sarah Perez", TEST_HEADERS);
+
+    // Verify key-service was called
+    const fetchMock = vi.mocked(fetch);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://key-service:3000/keys/anthropic/decrypt",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({
+          "X-API-Key": "test-key-service-key",
+          "x-org-id": TEST_HEADERS.orgId,
+          "x-user-id": TEST_HEADERS.userId,
+          "x-run-id": TEST_HEADERS.runId,
+        }),
+      }),
+    );
+  });
+
   it("extracts person authors and publishedAt", async () => {
     mockCreate.mockResolvedValue({
       content: [
@@ -25,7 +67,7 @@ describe("extractMetadataFromMarkdown", () => {
     });
 
     const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
-    const result = await extractMetadataFromMarkdown("# Article\nBy Sarah Perez\nPublished March 20, 2025");
+    const result = await extractMetadataFromMarkdown("# Article\nBy Sarah Perez\nPublished March 20, 2025", TEST_HEADERS);
 
     expect(result.isArticle).toBe(true);
     expect(result.authors).toEqual([{ type: "person", firstName: "Sarah", lastName: "Perez" }]);
@@ -46,7 +88,7 @@ describe("extractMetadataFromMarkdown", () => {
     });
 
     const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
-    const result = await extractMetadataFromMarkdown("# News\nBy Reuters");
+    const result = await extractMetadataFromMarkdown("# News\nBy Reuters", TEST_HEADERS);
 
     expect(result.authors).toEqual([{ type: "organization", firstName: "", lastName: "Reuters" }]);
   });
@@ -62,7 +104,7 @@ describe("extractMetadataFromMarkdown", () => {
     });
 
     const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
-    const result = await extractMetadataFromMarkdown("Welcome to our homepage!");
+    const result = await extractMetadataFromMarkdown("Welcome to our homepage!", TEST_HEADERS);
 
     expect(result.isArticle).toBe(false);
     expect(result.authors).toEqual([]);
@@ -75,7 +117,7 @@ describe("extractMetadataFromMarkdown", () => {
     });
 
     const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
-    const result = await extractMetadataFromMarkdown("Some random text");
+    const result = await extractMetadataFromMarkdown("Some random text", TEST_HEADERS);
 
     expect(result.isArticle).toBe(false);
     expect(result.authors).toEqual([]);
@@ -89,7 +131,7 @@ describe("extractMetadataFromMarkdown", () => {
 
     const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
     const longArticle = "x".repeat(10000);
-    await extractMetadataFromMarkdown(longArticle);
+    await extractMetadataFromMarkdown(longArticle, TEST_HEADERS);
 
     const calledWith = mockCreate.mock.calls[0][0];
     const messageContent = calledWith.messages[0].content as string;
@@ -108,11 +150,35 @@ describe("extractMetadataFromMarkdown", () => {
     });
 
     const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
-    const result = await extractMetadataFromMarkdown("# Story\nBy J. Smith and AP News");
+    const result = await extractMetadataFromMarkdown("# Story\nBy J. Smith and AP News", TEST_HEADERS);
 
     expect(result.authors).toHaveLength(2);
     expect(result.authors[0]).toEqual({ type: "person", firstName: "J.", lastName: "Smith" });
     expect(result.authors[1]).toEqual({ type: "organization", firstName: "", lastName: "AP News" });
     expect(result.publishedAt).toBe("2025-01-15T14:30:00+01:00");
+  });
+
+  it("throws when key-service returns an error", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      text: () => Promise.resolve("Key not configured"),
+    }));
+
+    mockCreate.mockResolvedValue({
+      content: [{ type: "text", text: '{"isArticle":true,"authors":[],"publishedAt":null}' }],
+    });
+
+    const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
+    await expect(extractMetadataFromMarkdown("# Article", TEST_HEADERS))
+      .rejects.toThrow("Key-service returned 404");
+  });
+
+  it("throws when KEY_SERVICE_URL is not set", async () => {
+    delete process.env.KEY_SERVICE_URL;
+
+    const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
+    await expect(extractMetadataFromMarkdown("# Article", TEST_HEADERS))
+      .rejects.toThrow("KEY_SERVICE_URL and KEY_SERVICE_API_KEY must be set");
   });
 });

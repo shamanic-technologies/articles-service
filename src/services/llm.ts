@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { IdentityHeaders } from "./google.js";
 
 export interface ExtractedAuthor {
   type: "person" | "organization";
@@ -12,17 +13,32 @@ export interface LlmExtractResult {
   publishedAt: string | null;
 }
 
-let client: Anthropic | null = null;
-
-function getClient(): Anthropic {
-  if (!client) {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      throw new Error("ANTHROPIC_API_KEY must be set");
-    }
-    client = new Anthropic({ apiKey });
+async function resolveAnthropicKey(headers: IdentityHeaders): Promise<string> {
+  const baseUrl = process.env.KEY_SERVICE_URL;
+  const apiKey = process.env.KEY_SERVICE_API_KEY;
+  if (!baseUrl || !apiKey) {
+    throw new Error("KEY_SERVICE_URL and KEY_SERVICE_API_KEY must be set");
   }
-  return client;
+
+  const res = await fetch(`${baseUrl}/keys/anthropic/decrypt`, {
+    method: "GET",
+    headers: {
+      "X-API-Key": apiKey,
+      "x-org-id": headers.orgId,
+      "x-user-id": headers.userId,
+      "x-run-id": headers.runId,
+      "X-Caller-Service": "articles-service",
+      "X-Caller-Endpoint": "extractMetadataFromMarkdown",
+    },
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Key-service returned ${res.status} for anthropic key: ${body}`);
+  }
+
+  const data = (await res.json()) as { key: string; keySource: string };
+  return data.key;
 }
 
 const EXTRACTION_PROMPT = `Extract author names and publication date from this article. Return ONLY valid JSON.
@@ -61,8 +77,12 @@ Non-article pages:
 Article content:
 `;
 
-export async function extractMetadataFromMarkdown(markdown: string): Promise<LlmExtractResult> {
-  const anthropic = getClient();
+export async function extractMetadataFromMarkdown(
+  markdown: string,
+  headers: IdentityHeaders,
+): Promise<LlmExtractResult> {
+  const anthropicKey = await resolveAnthropicKey(headers);
+  const anthropic = new Anthropic({ apiKey: anthropicKey });
 
   // Truncate very long articles to save tokens — metadata is always near the top
   const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) : markdown;
