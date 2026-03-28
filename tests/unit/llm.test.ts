@@ -170,7 +170,7 @@ describe("extractMetadataFromMarkdown", () => {
 
     const headers = {
       ...TEST_HEADERS,
-      workflowName: "discover-articles",
+      workflowSlug: "discover-articles",
       featureSlug: "pr-outreach",
       brandId: "brand-123",
       campaignId: "campaign-456",
@@ -181,7 +181,7 @@ describe("extractMetadataFromMarkdown", () => {
 
     const fetchMock = vi.mocked(fetch);
     const calledHeaders = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
-    expect(calledHeaders["x-workflow-name"]).toBe("discover-articles");
+    expect(calledHeaders["x-workflow-slug"]).toBe("discover-articles");
     expect(calledHeaders["x-feature-slug"]).toBe("pr-outreach");
     expect(calledHeaders["x-brand-id"]).toBe("brand-123");
     expect(calledHeaders["x-campaign-id"]).toBe("campaign-456");

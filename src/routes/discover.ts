@@ -17,7 +17,7 @@ function getIdentityHeaders(req: import("express").Request): IdentityHeaders {
     orgId: req.headers["x-org-id"] as string,
     userId: req.headers["x-user-id"] as string,
     runId: req.headers["x-run-id"] as string,
-    workflowName: req.headers["x-workflow-name"] as string | undefined,
+    workflowSlug: req.headers["x-workflow-slug"] as string | undefined,
     featureSlug: req.headers["x-feature-slug"] as string | undefined,
     brandId: req.headers["x-brand-id"] as string | undefined,
     campaignId: req.headers["x-campaign-id"] as string | undefined,

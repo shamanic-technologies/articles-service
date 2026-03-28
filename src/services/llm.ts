@@ -74,7 +74,7 @@ export async function extractMetadataFromMarkdown(
       "x-org-id": headers.orgId,
       "x-user-id": headers.userId,
       "x-run-id": headers.runId,
-      ...(headers.workflowName ? { "x-workflow-name": headers.workflowName } : {}),
+      ...(headers.workflowSlug ? { "x-workflow-slug": headers.workflowSlug } : {}),
       ...(headers.featureSlug ? { "x-feature-slug": headers.featureSlug } : {}),
       ...(headers.brandId ? { "x-brand-id": headers.brandId } : {}),
       ...(headers.campaignId ? { "x-campaign-id": headers.campaignId } : {}),

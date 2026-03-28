@@ -45,10 +45,10 @@ export function requireIdentity(req: Request, res: Response, next: NextFunction)
     return;
   }
 
-  const workflowName = req.headers["x-workflow-name"] as string | undefined;
-  if (workflowName !== undefined && (typeof workflowName !== "string" || workflowName.trim() === "")) {
+  const workflowSlug = req.headers["x-workflow-slug"] as string | undefined;
+  if (workflowSlug !== undefined && (typeof workflowSlug !== "string" || workflowSlug.trim() === "")) {
     res.status(400).json({
-      error: "x-workflow-name must be a non-empty string when provided",
+      error: "x-workflow-slug must be a non-empty string when provided",
     });
     return;
   }

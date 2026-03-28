@@ -1,0 +1,2607 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Articles Service",
+    "description": "API for indexing press articles and linking them to outlets, journalists, and topics",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3012"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "service"
+        ]
+      },
+      "Article": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "articleUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "snippet": {
+            "type": "string",
+            "nullable": true
+          },
+          "ogDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "twitterCreator": {
+            "type": "string",
+            "nullable": true
+          },
+          "newsKeywords": {
+            "type": "string",
+            "nullable": true
+          },
+          "articlePublished": {
+            "type": "string",
+            "nullable": true
+          },
+          "articleChannel": {
+            "type": "string",
+            "nullable": true
+          },
+          "twitterTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "articleSection": {
+            "type": "string",
+            "nullable": true
+          },
+          "author": {
+            "type": "string",
+            "nullable": true
+          },
+          "ogTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "articleAuthor": {
+            "type": "string",
+            "nullable": true
+          },
+          "twitterDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "articleModified": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "articleUrl",
+          "snippet",
+          "ogDescription",
+          "twitterCreator",
+          "newsKeywords",
+          "articlePublished",
+          "articleChannel",
+          "twitterTitle",
+          "articleSection",
+          "author",
+          "ogTitle",
+          "articleAuthor",
+          "twitterDescription",
+          "articleModified",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "formErrors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "fieldErrors": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "formErrors",
+              "fieldErrors"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "CreateArticleBody": {
+        "type": "object",
+        "properties": {
+          "articleUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "snippet": {
+            "type": "string"
+          },
+          "ogDescription": {
+            "type": "string"
+          },
+          "twitterCreator": {
+            "type": "string"
+          },
+          "newsKeywords": {
+            "type": "string"
+          },
+          "articlePublished": {
+            "type": "string"
+          },
+          "articleChannel": {
+            "type": "string"
+          },
+          "twitterTitle": {
+            "type": "string"
+          },
+          "articleSection": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "ogTitle": {
+            "type": "string"
+          },
+          "articleAuthor": {
+            "type": "string"
+          },
+          "twitterDescription": {
+            "type": "string"
+          },
+          "articleModified": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "articleUrl"
+        ]
+      },
+      "BulkCreateArticlesBody": {
+        "type": "object",
+        "properties": {
+          "articles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateArticleBody"
+            }
+          }
+        },
+        "required": [
+          "articles"
+        ]
+      },
+      "Topic": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "topicName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "topicName",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateTopicBody": {
+        "type": "object",
+        "properties": {
+          "topicName": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "topicName"
+        ]
+      },
+      "BulkCreateTopicsBody": {
+        "type": "object",
+        "properties": {
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateTopicBody"
+            }
+          }
+        },
+        "required": [
+          "topics"
+        ]
+      },
+      "ArticleDiscovery": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "articleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "featureSlug": {
+            "type": "string"
+          },
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outletId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "journalistId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "topicId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "articleId",
+          "orgId",
+          "brandId",
+          "featureSlug",
+          "campaignId",
+          "outletId",
+          "journalistId",
+          "topicId",
+          "createdAt"
+        ]
+      },
+      "CreateDiscoveryBody": {
+        "type": "object",
+        "properties": {
+          "articleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outletId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "journalistId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "topicId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "articleId"
+        ]
+      },
+      "BulkCreateDiscoveriesBody": {
+        "type": "object",
+        "properties": {
+          "discoveries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateDiscoveryBody"
+            }
+          }
+        },
+        "required": [
+          "discoveries"
+        ]
+      },
+      "ArticleAuthorView": {
+        "type": "object",
+        "properties": {
+          "articleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "articleUrl": {
+            "type": "string"
+          },
+          "computedTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "computedLargestContent": {
+            "type": "string",
+            "nullable": true
+          },
+          "computedAuthors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "computedPublishedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastActivityAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "articleCreatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "articleId",
+          "articleUrl",
+          "computedTitle",
+          "computedLargestContent",
+          "computedAuthors",
+          "computedPublishedAt",
+          "lastActivityAt",
+          "articleCreatedAt"
+        ]
+      },
+      "SearchArticlesBody": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "DiscoveredArticle": {
+        "type": "object",
+        "properties": {
+          "articleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "articleUrl": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "snippet": {
+            "type": "string",
+            "nullable": true
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExtractedAuthor"
+            }
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "articleId",
+          "articleUrl",
+          "title",
+          "snippet",
+          "authors",
+          "publishedAt"
+        ]
+      },
+      "ExtractedAuthor": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "person",
+              "organization"
+            ],
+            "description": "Whether this author is a person or an organization (news agency, editorial team, etc.)"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First name (empty for organizations or single-name authors)"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last name, or full name for organizations"
+          }
+        },
+        "required": [
+          "type",
+          "firstName",
+          "lastName"
+        ]
+      },
+      "DiscoverOutletArticlesBody": {
+        "type": "object",
+        "properties": {
+          "outletDomain": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Domain of the outlet (e.g. techcrunch.com)",
+            "example": "techcrunch.com"
+          },
+          "maxArticles": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "default": 10,
+            "description": "Max articles to discover (default 10)"
+          }
+        },
+        "required": [
+          "outletDomain"
+        ]
+      },
+      "DiscoverJournalistPublicationsBody": {
+        "type": "object",
+        "properties": {
+          "journalistFirstName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Journalist first name"
+          },
+          "journalistLastName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Journalist last name"
+          },
+          "journalistId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Journalist UUID for linking"
+          },
+          "maxResults": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "default": 10,
+            "description": "Max publications to find (default 10)"
+          }
+        },
+        "required": [
+          "journalistFirstName",
+          "journalistLastName",
+          "journalistId"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/articles": {
+      "post": {
+        "operationId": "createArticle",
+        "summary": "Create or upsert an article by URL",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArticleBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Article upserted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Article"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listArticles",
+        "summary": "List articles with pagination",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of articles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "articles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Article"
+                      }
+                    }
+                  },
+                  "required": [
+                    "articles"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/articles/{id}": {
+      "get": {
+        "operationId": "getArticle",
+        "summary": "Get a single article by ID",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Article found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Article"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Article not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/articles/bulk": {
+      "post": {
+        "operationId": "bulkCreateArticles",
+        "summary": "Bulk upsert articles",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCreateArticlesBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Articles upserted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "articles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Article"
+                      }
+                    }
+                  },
+                  "required": [
+                    "articles"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/topics": {
+      "post": {
+        "operationId": "createTopic",
+        "summary": "Create or upsert a topic by name",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTopicBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Topic upserted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Topic"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listTopics",
+        "summary": "List all topics",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of topics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "topics": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Topic"
+                      }
+                    }
+                  },
+                  "required": [
+                    "topics"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/topics/bulk": {
+      "post": {
+        "operationId": "bulkCreateTopics",
+        "summary": "Bulk upsert topics",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCreateTopicsBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Topics upserted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "topics": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Topic"
+                      }
+                    }
+                  },
+                  "required": [
+                    "topics"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discoveries": {
+      "post": {
+        "operationId": "createDiscovery",
+        "summary": "Link an article to a campaign context (org/brand/feature/campaign)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDiscoveryBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Discovery created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleDiscovery"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listDiscoveries",
+        "summary": "List article discoveries with filters",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "brandId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "campaignId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "outletId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "journalistId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "topicId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of discoveries with article data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "discoveries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "discovery": {
+                            "$ref": "#/components/schemas/ArticleDiscovery"
+                          },
+                          "article": {
+                            "$ref": "#/components/schemas/Article"
+                          }
+                        },
+                        "required": [
+                          "discovery",
+                          "article"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "discoveries"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discoveries/bulk": {
+      "post": {
+        "operationId": "bulkCreateDiscoveries",
+        "summary": "Bulk link articles to campaign contexts",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCreateDiscoveriesBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Discoveries created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "discoveries": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ArticleDiscovery"
+                      }
+                    }
+                  },
+                  "required": [
+                    "discoveries"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/articles/authors": {
+      "get": {
+        "operationId": "getArticlesWithAuthors",
+        "summary": "Articles with computed authors (v_articles_authors)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Articles with computed author data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "articles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ArticleAuthorView"
+                      }
+                    }
+                  },
+                  "required": [
+                    "articles"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/articles/search": {
+      "post": {
+        "operationId": "searchArticles",
+        "summary": "Full-text search across article fields",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchArticlesBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "articles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Article"
+                      }
+                    }
+                  },
+                  "required": [
+                    "articles"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discover/outlet-articles": {
+      "post": {
+        "operationId": "discoverOutletArticles",
+        "summary": "Discover recent articles from an outlet via Google News + scraping, and create scoped discoveries",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscoverOutletArticlesBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Discovered articles with extracted authors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "articles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DiscoveredArticle"
+                      }
+                    }
+                  },
+                  "required": [
+                    "articles"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream service error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discover/journalist-publications": {
+      "post": {
+        "operationId": "discoverJournalistPublications",
+        "summary": "Discover recent publications by a journalist and create scoped discoveries",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscoverJournalistPublicationsBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Journalist publications with extracted authors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "articles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DiscoveredArticle"
+                      }
+                    }
+                  },
+                  "required": [
+                    "articles"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream service error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/articles/by-urls": {
+      "get": {
+        "operationId": "getArticlesByUrls",
+        "summary": "Batch lookup articles by URLs",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated list of URLs"
+            },
+            "required": true,
+            "description": "Comma-separated list of URLs",
+            "name": "urls",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Articles found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "articles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Article"
+                      }
+                    }
+                  },
+                  "required": [
+                    "articles"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

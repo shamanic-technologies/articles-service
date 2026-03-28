@@ -15,7 +15,7 @@ export interface IdentityHeaders {
   orgId: string;
   userId: string;
   runId: string;
-  workflowName?: string;
+  workflowSlug?: string;
   featureSlug?: string;
   brandId?: string;
   campaignId?: string;
@@ -40,7 +40,7 @@ export async function searchNews(
       "x-org-id": headers.orgId,
       "x-user-id": headers.userId,
       "x-run-id": headers.runId,
-      ...(headers.workflowName ? { "x-workflow-name": headers.workflowName } : {}),
+      ...(headers.workflowSlug ? { "x-workflow-slug": headers.workflowSlug } : {}),
       ...(headers.featureSlug ? { "x-feature-slug": headers.featureSlug } : {}),
       ...(headers.brandId ? { "x-brand-id": headers.brandId } : {}),
       ...(headers.campaignId ? { "x-campaign-id": headers.campaignId } : {}),
