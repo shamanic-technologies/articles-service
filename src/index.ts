@@ -10,6 +10,7 @@ import topicsRoutes from "./routes/topics.js";
 import discoveriesRoutes from "./routes/discoveries.js";
 import discoverRoutes from "./routes/discover.js";
 import internalRoutes from "./routes/internal.js";
+import statsRoutes from "./routes/stats.js";
 import { requireIdentity } from "./middleware/identity.js";
 import { db } from "./db/index.js";
 
@@ -34,6 +35,8 @@ app.get("/openapi.json", async (_req, res) => {
 
 // Routes exempt from identity headers
 app.use(healthRoutes);
+// Stats routes handle their own auth (public = API key only, private = identity headers)
+app.use(statsRoutes);
 
 // All routes below require x-org-id, x-user-id, and x-run-id headers
 app.use(requireIdentity);

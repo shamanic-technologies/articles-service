@@ -42,6 +42,7 @@ export async function insertTestDiscovery(data: {
   brandId: string;
   featureSlug: string;
   campaignId: string;
+  workflowSlug?: string | null;
   outletId?: string | null;
   journalistId?: string | null;
   topicId?: string | null;
@@ -53,6 +54,7 @@ export async function insertTestDiscovery(data: {
       orgId: data.orgId,
       brandId: data.brandId,
       featureSlug: data.featureSlug,
+      workflowSlug: data.workflowSlug ?? null,
       campaignId: data.campaignId,
       outletId: data.outletId ?? null,
       journalistId: data.journalistId ?? null,

@@ -68,6 +68,7 @@ export const ArticleDiscoverySchema = z
     orgId: z.string().uuid(),
     brandId: z.string().uuid(),
     featureSlug: z.string(),
+    workflowSlug: z.string().nullable(),
     campaignId: z.string().uuid(),
     outletId: z.string().uuid().nullable(),
     journalistId: z.string().uuid().nullable(),
@@ -179,6 +180,56 @@ export const DiscoveredArticleSchema = z
     publishedAt: z.string().nullable(),
   })
   .openapi("DiscoveredArticle");
+
+// --- Stats schemas ---
+
+export const StatsGroupByEnum = z
+  .enum([
+    "brandId",
+    "campaignId",
+    "workflowSlug",
+    "featureSlug",
+    "workflowDynastySlug",
+    "featureDynastySlug",
+  ])
+  .openapi("StatsGroupBy");
+
+export const StatsQuerySchema = z
+  .object({
+    orgId: z.string().uuid().optional().openapi({ description: "Filter by organization ID" }),
+    brandId: z.string().uuid().optional().openapi({ description: "Filter by brand ID" }),
+    campaignId: z.string().uuid().optional().openapi({ description: "Filter by campaign ID" }),
+    workflowSlug: z.string().optional().openapi({ description: "Filter by exact workflow slug" }),
+    featureSlug: z.string().optional().openapi({ description: "Filter by exact feature slug" }),
+    workflowDynastySlug: z.string().optional().openapi({ description: "Filter by workflow dynasty slug (resolves to all versioned slugs via workflow-service)" }),
+    featureDynastySlug: z.string().optional().openapi({ description: "Filter by feature dynasty slug (resolves to all versioned slugs via features-service)" }),
+    groupBy: StatsGroupByEnum.optional().openapi({ description: "Group results by dimension" }),
+  })
+  .openapi("StatsQuery");
+
+export const DiscoveryStatsSchema = z
+  .object({
+    totalDiscoveries: z.number().openapi({ description: "Total number of article discoveries" }),
+    uniqueArticles: z.number().openapi({ description: "Number of unique articles" }),
+    uniqueOutlets: z.number().openapi({ description: "Number of unique outlets" }),
+    uniqueJournalists: z.number().openapi({ description: "Number of unique journalists" }),
+  })
+  .openapi("DiscoveryStats");
+
+export const FlatStatsResponseSchema = z
+  .object({ stats: DiscoveryStatsSchema })
+  .openapi("FlatStatsResponse");
+
+export const GroupedStatsResponseSchema = z
+  .object({
+    groups: z.array(
+      z.object({
+        key: z.string(),
+        stats: DiscoveryStatsSchema,
+      }),
+    ),
+  })
+  .openapi("GroupedStatsResponse");
 
 // --- Shared header parameters ---
 
@@ -445,6 +496,47 @@ registry.registerPath({
   },
   responses: {
     200: { description: "Articles found", content: { "application/json": { schema: z.object({ articles: z.array(ArticleSchema) }) } } },
+    500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
+  },
+});
+
+// Stats endpoints
+
+registry.registerPath({
+  method: "get",
+  path: "/v1/stats",
+  operationId: "getStats",
+  summary: "Get aggregated article discovery stats",
+  description: "Get aggregated discovery stats optionally filtered by orgId, brandId, campaignId, workflowSlug, featureSlug, workflowDynastySlug, and/or featureDynastySlug. Dynasty slug filters resolve to all versioned slugs via the respective service. When groupBy is provided, returns grouped results.",
+  request: {
+    headers: IdentityHeadersSchema,
+    query: StatsQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Aggregated stats (flat or grouped depending on groupBy parameter)",
+      content: { "application/json": { schema: z.union([FlatStatsResponseSchema, GroupedStatsResponseSchema]) } },
+    },
+    400: { description: "Invalid request", content: { "application/json": { schema: ErrorResponseSchema } } },
+    500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/v1/stats/public",
+  operationId: "getStatsPublic",
+  summary: "Get aggregated stats (service auth only)",
+  description: "Same as GET /v1/stats but only requires X-API-Key (no x-org-id, x-user-id, x-run-id headers). Used by other services for stats aggregation.",
+  request: {
+    query: StatsQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Aggregated stats (flat or grouped depending on groupBy parameter)",
+      content: { "application/json": { schema: z.union([FlatStatsResponseSchema, GroupedStatsResponseSchema]) } },
+    },
+    400: { description: "Invalid request", content: { "application/json": { schema: ErrorResponseSchema } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
   },
 });

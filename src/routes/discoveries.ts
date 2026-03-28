@@ -20,6 +20,7 @@ router.post("/v1/discoveries", requireApiKey, async (req, res) => {
     const brandId = req.headers["x-brand-id"] as string | undefined;
     const campaignId = req.headers["x-campaign-id"] as string | undefined;
     const featureSlug = req.headers["x-feature-slug"] as string | undefined;
+    const workflowSlug = req.headers["x-workflow-slug"] as string | undefined;
 
     if (!brandId || !campaignId) {
       res.status(400).json({ error: "x-brand-id and x-campaign-id headers are required" });
@@ -33,6 +34,7 @@ router.post("/v1/discoveries", requireApiKey, async (req, res) => {
         orgId,
         brandId,
         featureSlug: featureSlug ?? "unknown",
+        workflowSlug: workflowSlug ?? null,
         campaignId,
         outletId: parsed.data.outletId ?? null,
         journalistId: parsed.data.journalistId ?? null,
@@ -65,6 +67,7 @@ router.post("/v1/discoveries/bulk", requireApiKey, async (req, res) => {
     const brandId = req.headers["x-brand-id"] as string | undefined;
     const campaignId = req.headers["x-campaign-id"] as string | undefined;
     const featureSlug = req.headers["x-feature-slug"] as string | undefined;
+    const workflowSlug = req.headers["x-workflow-slug"] as string | undefined;
 
     if (!brandId || !campaignId) {
       res.status(400).json({ error: "x-brand-id and x-campaign-id headers are required" });
@@ -76,6 +79,7 @@ router.post("/v1/discoveries/bulk", requireApiKey, async (req, res) => {
       orgId,
       brandId,
       featureSlug: featureSlug ?? "unknown",
+      workflowSlug: workflowSlug ?? null,
       campaignId,
       outletId: d.outletId ?? null,
       journalistId: d.journalistId ?? null,

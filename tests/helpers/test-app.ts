@@ -9,6 +9,7 @@ import topicsRoutes from "../../src/routes/topics.js";
 import discoveriesRoutes from "../../src/routes/discoveries.js";
 import discoverRoutes from "../../src/routes/discover.js";
 import internalRoutes from "../../src/routes/internal.js";
+import statsRoutes from "../../src/routes/stats.js";
 import { requireIdentity } from "../../src/middleware/identity.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,6 +36,7 @@ export function createTestApp() {
     }
   });
   app.use(healthRoutes);
+  app.use(statsRoutes);
   app.use(requireIdentity);
   app.use(articlesRoutes);
   app.use(topicsRoutes);
