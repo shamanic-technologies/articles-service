@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import request from "supertest";
-import { createTestApp, getAuthHeaders, TEST_ORG_ID, TEST_USER_ID, TEST_RUN_ID, TEST_BRAND_ID, TEST_CAMPAIGN_ID, TEST_FEATURE_SLUG, TEST_WORKFLOW_NAME } from "../helpers/test-app.js";
+import { createTestApp, getAuthHeaders, TEST_ORG_ID, TEST_USER_ID, TEST_RUN_ID, TEST_BRAND_ID, TEST_CAMPAIGN_ID, TEST_FEATURE_SLUG, TEST_WORKFLOW_SLUG } from "../helpers/test-app.js";
 import { cleanTestData, closeDb, insertTestArticle } from "../helpers/test-db.js";
 import { db } from "../../src/db/index.js";
 import { articles, articleDiscoveries } from "../../src/db/schema.js";
@@ -211,7 +211,7 @@ describe("POST /v1/discover/outlet-articles", () => {
         orgId: TEST_ORG_ID,
         userId: TEST_USER_ID,
         runId: TEST_RUN_ID,
-        workflowName: TEST_WORKFLOW_NAME,
+        workflowSlug: TEST_WORKFLOW_SLUG,
         featureSlug: TEST_FEATURE_SLUG,
         brandId: TEST_BRAND_ID,
         campaignId: TEST_CAMPAIGN_ID,
@@ -355,7 +355,7 @@ describe("POST /v1/discover/journalist-publications", () => {
         orgId: TEST_ORG_ID,
         userId: TEST_USER_ID,
         runId: TEST_RUN_ID,
-        workflowName: TEST_WORKFLOW_NAME,
+        workflowSlug: TEST_WORKFLOW_SLUG,
         featureSlug: TEST_FEATURE_SLUG,
         brandId: TEST_BRAND_ID,
         campaignId: TEST_CAMPAIGN_ID,

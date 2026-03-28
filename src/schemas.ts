@@ -186,7 +186,7 @@ export const IdentityHeadersSchema = z.object({
   "x-org-id": z.string().uuid().openapi({ description: "Internal org UUID" }),
   "x-user-id": z.string().uuid().openapi({ description: "Internal user UUID" }),
   "x-run-id": z.string().uuid().openapi({ description: "Run UUID from runs-service" }),
-  "x-workflow-name": z.string().optional().openapi({ description: "Workflow name for tracking" }),
+  "x-workflow-slug": z.string().optional().openapi({ description: "Workflow slug for tracking" }),
   "x-feature-slug": z.string().optional().openapi({ description: "Feature slug for tracking/filtering" }),
   "x-brand-id": z.string().uuid().optional().openapi({ description: "Brand UUID for scoping" }),
   "x-campaign-id": z.string().uuid().optional().openapi({ description: "Campaign UUID for inter-service propagation" }),

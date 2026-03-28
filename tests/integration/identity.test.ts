@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
-import { createTestApp, TEST_ORG_ID, TEST_USER_ID, TEST_RUN_ID, TEST_FEATURE_SLUG, TEST_BRAND_ID, TEST_CAMPAIGN_ID, TEST_WORKFLOW_NAME } from "../helpers/test-app.js";
+import { createTestApp, TEST_ORG_ID, TEST_USER_ID, TEST_RUN_ID, TEST_FEATURE_SLUG, TEST_BRAND_ID, TEST_CAMPAIGN_ID, TEST_WORKFLOW_SLUG } from "../helpers/test-app.js";
 
 const app = createTestApp();
 
@@ -151,27 +151,27 @@ describe("Identity middleware", () => {
     expect(res.body.error).toContain("x-brand-id");
   });
 
-  // x-workflow-name
+  // x-workflow-slug
 
-  it("passes through with valid x-workflow-name", async () => {
+  it("passes through with valid x-workflow-slug", async () => {
     const res = await request(app)
       .get("/v1/articles")
-      .set({ ...baseHeaders, "x-workflow-name": TEST_WORKFLOW_NAME });
+      .set({ ...baseHeaders, "x-workflow-slug": TEST_WORKFLOW_SLUG });
     expect(res.status).not.toBe(400);
   });
 
-  it("passes through without x-workflow-name (it is optional)", async () => {
+  it("passes through without x-workflow-slug (it is optional)", async () => {
     const res = await request(app)
       .get("/v1/articles")
       .set(baseHeaders);
     expect(res.status).not.toBe(400);
   });
 
-  it("returns 400 when x-workflow-name is empty string", async () => {
+  it("returns 400 when x-workflow-slug is empty string", async () => {
     const res = await request(app)
       .get("/v1/articles")
-      .set({ ...baseHeaders, "x-workflow-name": "" });
+      .set({ ...baseHeaders, "x-workflow-slug": "" });
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain("x-workflow-name");
+    expect(res.body.error).toContain("x-workflow-slug");
   });
 });
