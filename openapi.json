@@ -311,6 +311,10 @@
           "featureSlug": {
             "type": "string"
           },
+          "workflowSlug": {
+            "type": "string",
+            "nullable": true
+          },
           "campaignId": {
             "type": "string",
             "format": "uuid"
@@ -341,6 +345,7 @@
           "orgId",
           "brandId",
           "featureSlug",
+          "workflowSlug",
           "campaignId",
           "outletId",
           "journalistId",
@@ -573,6 +578,82 @@
           "journalistLastName",
           "journalistId"
         ]
+      },
+      "FlatStatsResponse": {
+        "type": "object",
+        "properties": {
+          "stats": {
+            "$ref": "#/components/schemas/DiscoveryStats"
+          }
+        },
+        "required": [
+          "stats"
+        ]
+      },
+      "DiscoveryStats": {
+        "type": "object",
+        "properties": {
+          "totalDiscoveries": {
+            "type": "number",
+            "description": "Total number of article discoveries"
+          },
+          "uniqueArticles": {
+            "type": "number",
+            "description": "Number of unique articles"
+          },
+          "uniqueOutlets": {
+            "type": "number",
+            "description": "Number of unique outlets"
+          },
+          "uniqueJournalists": {
+            "type": "number",
+            "description": "Number of unique journalists"
+          }
+        },
+        "required": [
+          "totalDiscoveries",
+          "uniqueArticles",
+          "uniqueOutlets",
+          "uniqueJournalists"
+        ]
+      },
+      "GroupedStatsResponse": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "stats": {
+                  "$ref": "#/components/schemas/DiscoveryStats"
+                }
+              },
+              "required": [
+                "key",
+                "stats"
+              ]
+            }
+          }
+        },
+        "required": [
+          "groups"
+        ]
+      },
+      "StatsGroupBy": {
+        "type": "string",
+        "enum": [
+          "brandId",
+          "campaignId",
+          "workflowSlug",
+          "featureSlug",
+          "workflowDynastySlug",
+          "featureDynastySlug"
+        ],
+        "description": "Group results by dimension"
       }
     },
     "parameters": {}
@@ -2586,6 +2667,341 @@
                   "required": [
                     "articles"
                   ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stats": {
+      "get": {
+        "operationId": "getStats",
+        "summary": "Get aggregated article discovery stats",
+        "description": "Get aggregated discovery stats optionally filtered by orgId, brandId, campaignId, workflowSlug, featureSlug, workflowDynastySlug, and/or featureDynastySlug. Dynasty slug filters resolve to all versioned slugs via the respective service. When groupBy is provided, returns grouped results.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Filter by organization ID"
+            },
+            "required": false,
+            "description": "Filter by organization ID",
+            "name": "orgId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Filter by brand ID"
+            },
+            "required": false,
+            "description": "Filter by brand ID",
+            "name": "brandId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Filter by campaign ID"
+            },
+            "required": false,
+            "description": "Filter by campaign ID",
+            "name": "campaignId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by exact workflow slug"
+            },
+            "required": false,
+            "description": "Filter by exact workflow slug",
+            "name": "workflowSlug",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by exact feature slug"
+            },
+            "required": false,
+            "description": "Filter by exact feature slug",
+            "name": "featureSlug",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by workflow dynasty slug (resolves to all versioned slugs via workflow-service)"
+            },
+            "required": false,
+            "description": "Filter by workflow dynasty slug (resolves to all versioned slugs via workflow-service)",
+            "name": "workflowDynastySlug",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by feature dynasty slug (resolves to all versioned slugs via features-service)"
+            },
+            "required": false,
+            "description": "Filter by feature dynasty slug (resolves to all versioned slugs via features-service)",
+            "name": "featureDynastySlug",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "$ref": "#/components/schemas/StatsGroupBy"
+            },
+            "required": false,
+            "description": "Group results by dimension",
+            "name": "groupBy",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal org UUID"
+            },
+            "required": true,
+            "description": "Internal org UUID",
+            "name": "x-org-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Internal user UUID"
+            },
+            "required": true,
+            "description": "Internal user UUID",
+            "name": "x-user-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Run UUID from runs-service"
+            },
+            "required": true,
+            "description": "Run UUID from runs-service",
+            "name": "x-run-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Workflow slug for tracking"
+            },
+            "required": false,
+            "description": "Workflow slug for tracking",
+            "name": "x-workflow-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Feature slug for tracking/filtering"
+            },
+            "required": false,
+            "description": "Feature slug for tracking/filtering",
+            "name": "x-feature-slug",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Brand UUID for scoping"
+            },
+            "required": false,
+            "description": "Brand UUID for scoping",
+            "name": "x-brand-id",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Campaign UUID for inter-service propagation"
+            },
+            "required": false,
+            "description": "Campaign UUID for inter-service propagation",
+            "name": "x-campaign-id",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregated stats (flat or grouped depending on groupBy parameter)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/FlatStatsResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/GroupedStatsResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stats/public": {
+      "get": {
+        "operationId": "getStatsPublic",
+        "summary": "Get aggregated stats (service auth only)",
+        "description": "Same as GET /v1/stats but only requires X-API-Key (no x-org-id, x-user-id, x-run-id headers). Used by other services for stats aggregation.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Filter by organization ID"
+            },
+            "required": false,
+            "description": "Filter by organization ID",
+            "name": "orgId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Filter by brand ID"
+            },
+            "required": false,
+            "description": "Filter by brand ID",
+            "name": "brandId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Filter by campaign ID"
+            },
+            "required": false,
+            "description": "Filter by campaign ID",
+            "name": "campaignId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by exact workflow slug"
+            },
+            "required": false,
+            "description": "Filter by exact workflow slug",
+            "name": "workflowSlug",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by exact feature slug"
+            },
+            "required": false,
+            "description": "Filter by exact feature slug",
+            "name": "featureSlug",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by workflow dynasty slug (resolves to all versioned slugs via workflow-service)"
+            },
+            "required": false,
+            "description": "Filter by workflow dynasty slug (resolves to all versioned slugs via workflow-service)",
+            "name": "workflowDynastySlug",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by feature dynasty slug (resolves to all versioned slugs via features-service)"
+            },
+            "required": false,
+            "description": "Filter by feature dynasty slug (resolves to all versioned slugs via features-service)",
+            "name": "featureDynastySlug",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "$ref": "#/components/schemas/StatsGroupBy"
+            },
+            "required": false,
+            "description": "Group results by dimension",
+            "name": "groupBy",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregated stats (flat or grouped depending on groupBy parameter)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/FlatStatsResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/GroupedStatsResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }

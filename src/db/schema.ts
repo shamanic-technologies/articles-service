@@ -49,6 +49,7 @@ export const articleDiscoveries = pgTable(
     orgId: uuid("org_id").notNull(),
     brandId: uuid("brand_id").notNull(),
     featureSlug: text("feature_slug").notNull(),
+    workflowSlug: text("workflow_slug"),
     campaignId: uuid("campaign_id").notNull(),
     outletId: uuid("outlet_id"),
     journalistId: uuid("journalist_id"),
@@ -64,6 +65,8 @@ export const articleDiscoveries = pgTable(
     index("idx_ad_journalist").on(table.journalistId),
     index("idx_ad_topic").on(table.topicId),
     index("idx_ad_article_campaign").on(table.articleId, table.campaignId),
+    index("idx_ad_workflow_slug").on(table.workflowSlug),
+    index("idx_ad_feature_slug").on(table.featureSlug),
   ]
 );
 
