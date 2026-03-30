@@ -32,61 +32,61 @@ export const HealthResponseSchema = z
 
 export const ArticleSchema = z
   .object({
-    id: z.string().uuid(),
-    articleUrl: z.string().url(),
-    snippet: z.string().nullable(),
-    ogDescription: z.string().nullable(),
-    twitterCreator: z.string().nullable(),
-    newsKeywords: z.string().nullable(),
-    articlePublished: z.string().nullable(),
-    articleChannel: z.string().nullable(),
-    twitterTitle: z.string().nullable(),
-    articleSection: z.string().nullable(),
-    author: z.string().nullable(),
-    ogTitle: z.string().nullable(),
-    articleAuthor: z.string().nullable(),
-    twitterDescription: z.string().nullable(),
-    articleModified: z.string().nullable(),
-    createdAt: z.string().datetime(),
-    updatedAt: z.string().datetime(),
+    id: z.string().uuid().openapi({ description: "Unique article identifier", example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" }),
+    articleUrl: z.string().url().openapi({ description: "Canonical URL of the article", example: "https://techcrunch.com/2025/03/15/ai-funding-roundup" }),
+    snippet: z.string().nullable().openapi({ description: "Short text excerpt from the article or search result" }),
+    ogDescription: z.string().nullable().openapi({ description: "OpenGraph og:description meta tag value" }),
+    twitterCreator: z.string().nullable().openapi({ description: "Twitter/X @handle of the article creator", example: "@johndoe" }),
+    newsKeywords: z.string().nullable().openapi({ description: "Comma-separated news keywords meta tag" }),
+    articlePublished: z.string().nullable().openapi({ description: "Published date from article metadata", example: "2025-03-15T10:00:00Z" }),
+    articleChannel: z.string().nullable().openapi({ description: "Channel or vertical the article belongs to", example: "Technology" }),
+    twitterTitle: z.string().nullable().openapi({ description: "Twitter/X card title meta tag" }),
+    articleSection: z.string().nullable().openapi({ description: "Section of the publication", example: "Startups" }),
+    author: z.string().nullable().openapi({ description: "Serialized author data extracted via scraping (JSON array of ExtractedAuthor objects)" }),
+    ogTitle: z.string().nullable().openapi({ description: "OpenGraph og:title meta tag value", example: "AI Funding Hits Record High in Q1 2025" }),
+    articleAuthor: z.string().nullable().openapi({ description: "Raw author string from article:author meta tag" }),
+    twitterDescription: z.string().nullable().openapi({ description: "Twitter/X card description meta tag" }),
+    articleModified: z.string().nullable().openapi({ description: "Last modified date from article metadata" }),
+    createdAt: z.string().datetime().openapi({ description: "When this article record was first created" }),
+    updatedAt: z.string().datetime().openapi({ description: "When this article record was last updated" }),
   })
   .openapi("Article");
 
 export const TopicSchema = z
   .object({
-    id: z.string().uuid(),
-    topicName: z.string(),
-    createdAt: z.string().datetime(),
-    updatedAt: z.string().datetime(),
+    id: z.string().uuid().openapi({ description: "Unique topic identifier" }),
+    topicName: z.string().openapi({ description: "Human-readable topic name", example: "Artificial Intelligence" }),
+    createdAt: z.string().datetime().openapi({ description: "When this topic was created" }),
+    updatedAt: z.string().datetime().openapi({ description: "When this topic was last updated" }),
   })
   .openapi("Topic");
 
 export const ArticleDiscoverySchema = z
   .object({
-    id: z.string().uuid(),
-    articleId: z.string().uuid(),
-    orgId: z.string().uuid(),
-    brandId: z.string().uuid(),
-    featureSlug: z.string(),
-    workflowSlug: z.string().nullable(),
-    campaignId: z.string().uuid(),
-    outletId: z.string().uuid().nullable(),
-    journalistId: z.string().uuid().nullable(),
-    topicId: z.string().uuid().nullable(),
-    createdAt: z.string().datetime(),
+    id: z.string().uuid().openapi({ description: "Unique discovery record identifier" }),
+    articleId: z.string().uuid().openapi({ description: "ID of the discovered article" }),
+    orgId: z.string().uuid().openapi({ description: "Organization that owns this discovery" }),
+    brandId: z.string().uuid().openapi({ description: "Brand this discovery is scoped to" }),
+    featureSlug: z.string().openapi({ description: "Feature that triggered this discovery", example: "press-outreach-v3" }),
+    workflowSlug: z.string().nullable().openapi({ description: "Workflow that triggered this discovery" }),
+    campaignId: z.string().uuid().openapi({ description: "Campaign this discovery belongs to" }),
+    outletId: z.string().uuid().nullable().openapi({ description: "Outlet linked to this discovery (if from outlet discovery)" }),
+    journalistId: z.string().uuid().nullable().openapi({ description: "Journalist linked to this discovery (if from journalist discovery)" }),
+    topicId: z.string().uuid().nullable().openapi({ description: "Topic linked to this discovery" }),
+    createdAt: z.string().datetime().openapi({ description: "When this discovery was created" }),
   })
   .openapi("ArticleDiscovery");
 
 export const ArticleAuthorViewSchema = z
   .object({
-    articleId: z.string().uuid(),
-    articleUrl: z.string(),
-    computedTitle: z.string().nullable(),
-    computedLargestContent: z.string().nullable(),
-    computedAuthors: z.array(z.string()),
-    computedPublishedAt: z.string().nullable(),
-    lastActivityAt: z.string().datetime(),
-    articleCreatedAt: z.string().datetime(),
+    articleId: z.string().uuid().openapi({ description: "Article identifier" }),
+    articleUrl: z.string().openapi({ description: "Canonical URL of the article" }),
+    computedTitle: z.string().nullable().openapi({ description: "Best-effort title derived from og:title, twitter:title, or snippet" }),
+    computedLargestContent: z.string().nullable().openapi({ description: "Longest content field available (for display/preview)" }),
+    computedAuthors: z.array(z.string()).openapi({ description: "Deduplicated list of author names extracted from all metadata sources" }),
+    computedPublishedAt: z.string().nullable().openapi({ description: "Best-effort publication date from available metadata" }),
+    lastActivityAt: z.string().datetime().openapi({ description: "Most recent update across all linked records" }),
+    articleCreatedAt: z.string().datetime().openapi({ description: "When the article was first indexed" }),
   })
   .openapi("ArticleAuthorView");
 
@@ -94,53 +94,53 @@ export const ArticleAuthorViewSchema = z
 
 export const CreateArticleBodySchema = z
   .object({
-    articleUrl: z.string().url(),
-    snippet: z.string().optional(),
-    ogDescription: z.string().optional(),
-    twitterCreator: z.string().optional(),
-    newsKeywords: z.string().optional(),
-    articlePublished: z.string().optional(),
-    articleChannel: z.string().optional(),
-    twitterTitle: z.string().optional(),
-    articleSection: z.string().optional(),
-    author: z.string().optional(),
-    ogTitle: z.string().optional(),
-    articleAuthor: z.string().optional(),
-    twitterDescription: z.string().optional(),
-    articleModified: z.string().optional(),
+    articleUrl: z.string().url().openapi({ description: "Canonical URL of the article (used as upsert key)", example: "https://techcrunch.com/2025/03/15/ai-funding-roundup" }),
+    snippet: z.string().optional().openapi({ description: "Short text excerpt from the article" }),
+    ogDescription: z.string().optional().openapi({ description: "OpenGraph og:description meta tag" }),
+    twitterCreator: z.string().optional().openapi({ description: "Twitter/X @handle of the creator" }),
+    newsKeywords: z.string().optional().openapi({ description: "Comma-separated news keywords" }),
+    articlePublished: z.string().optional().openapi({ description: "Published date string from metadata" }),
+    articleChannel: z.string().optional().openapi({ description: "Channel or vertical" }),
+    twitterTitle: z.string().optional().openapi({ description: "Twitter/X card title" }),
+    articleSection: z.string().optional().openapi({ description: "Section of the publication" }),
+    author: z.string().optional().openapi({ description: "Serialized author data" }),
+    ogTitle: z.string().optional().openapi({ description: "OpenGraph og:title" }),
+    articleAuthor: z.string().optional().openapi({ description: "Raw author string from article:author meta tag" }),
+    twitterDescription: z.string().optional().openapi({ description: "Twitter/X card description" }),
+    articleModified: z.string().optional().openapi({ description: "Last modified date from metadata" }),
   })
   .openapi("CreateArticleBody");
 
 export const BulkCreateArticlesBodySchema = z
-  .object({ articles: z.array(CreateArticleBodySchema) })
+  .object({ articles: z.array(CreateArticleBodySchema).openapi({ description: "Array of articles to upsert" }) })
   .openapi("BulkCreateArticlesBody");
 
 export const CreateTopicBodySchema = z
-  .object({ topicName: z.string().min(1) })
+  .object({ topicName: z.string().min(1).openapi({ description: "Topic name (used as upsert key)", example: "Artificial Intelligence" }) })
   .openapi("CreateTopicBody");
 
 export const BulkCreateTopicsBodySchema = z
-  .object({ topics: z.array(CreateTopicBodySchema) })
+  .object({ topics: z.array(CreateTopicBodySchema).openapi({ description: "Array of topics to upsert" }) })
   .openapi("BulkCreateTopicsBody");
 
 export const CreateDiscoveryBodySchema = z
   .object({
-    articleId: z.string().uuid(),
-    outletId: z.string().uuid().optional(),
-    journalistId: z.string().uuid().optional(),
-    topicId: z.string().uuid().optional(),
+    articleId: z.string().uuid().openapi({ description: "ID of the article to link" }),
+    outletId: z.string().uuid().optional().openapi({ description: "Outlet to associate with this discovery" }),
+    journalistId: z.string().uuid().optional().openapi({ description: "Journalist to associate with this discovery" }),
+    topicId: z.string().uuid().optional().openapi({ description: "Topic to associate with this discovery" }),
   })
   .openapi("CreateDiscoveryBody");
 
 export const BulkCreateDiscoveriesBodySchema = z
-  .object({ discoveries: z.array(CreateDiscoveryBodySchema) })
+  .object({ discoveries: z.array(CreateDiscoveryBodySchema).openapi({ description: "Array of discovery records to create" }) })
   .openapi("BulkCreateDiscoveriesBody");
 
 export const SearchArticlesBodySchema = z
   .object({
-    query: z.string().min(1),
-    limit: z.number().int().min(1).max(100).optional().default(20),
-    offset: z.number().int().min(0).optional().default(0),
+    query: z.string().min(1).openapi({ description: "Full-text search query", example: "AI funding startup" }),
+    limit: z.number().int().min(1).max(100).optional().default(20).openapi({ description: "Max results to return (default 20, max 100)" }),
+    offset: z.number().int().min(0).optional().default(0).openapi({ description: "Number of results to skip for pagination" }),
   })
   .openapi("SearchArticlesBody");
 
@@ -155,29 +155,29 @@ export const DiscoverOutletArticlesBodySchema = z
 
 export const DiscoverJournalistPublicationsBodySchema = z
   .object({
-    journalistFirstName: z.string().min(1).openapi({ description: "Journalist first name" }),
-    journalistLastName: z.string().min(1).openapi({ description: "Journalist last name" }),
-    journalistId: z.string().uuid().openapi({ description: "Journalist UUID for linking" }),
-    maxResults: z.number().int().min(1).max(20).optional().default(10).openapi({ description: "Max publications to find (default 10)" }),
+    journalistFirstName: z.string().min(1).openapi({ description: "Journalist first name", example: "Sarah" }),
+    journalistLastName: z.string().min(1).openapi({ description: "Journalist last name", example: "Perez" }),
+    journalistId: z.string().uuid().openapi({ description: "Journalist UUID for linking discoveries back to the journalist record" }),
+    maxResults: z.number().int().min(1).max(20).optional().default(10).openapi({ description: "Max publications to find (default 10, max 20)" }),
   })
   .openapi("DiscoverJournalistPublicationsBody");
 
 export const ExtractedAuthorSchema = z
   .object({
-    type: z.enum(["person", "organization"]).openapi({ description: "Whether this author is a person or an organization (news agency, editorial team, etc.)" }),
-    firstName: z.string().openapi({ description: "First name (empty for organizations or single-name authors)" }),
-    lastName: z.string().openapi({ description: "Last name, or full name for organizations" }),
+    type: z.enum(["person", "organization"]).openapi({ description: "Whether this author is a person or an organization (news agency, editorial team, etc.)", example: "person" }),
+    firstName: z.string().openapi({ description: "First name (empty string for organizations or single-name authors)", example: "Sarah" }),
+    lastName: z.string().openapi({ description: "Last name, or full name for organizations", example: "Perez" }),
   })
   .openapi("ExtractedAuthor");
 
 export const DiscoveredArticleSchema = z
   .object({
-    articleId: z.string().uuid(),
-    articleUrl: z.string(),
-    title: z.string().nullable(),
-    snippet: z.string().nullable(),
-    authors: z.array(ExtractedAuthorSchema),
-    publishedAt: z.string().nullable(),
+    articleId: z.string().uuid().openapi({ description: "ID of the upserted article record" }),
+    articleUrl: z.string().openapi({ description: "URL of the discovered article", example: "https://techcrunch.com/2025/03/15/ai-funding-roundup" }),
+    title: z.string().nullable().openapi({ description: "Article title from OpenGraph or search result" }),
+    snippet: z.string().nullable().openapi({ description: "Short excerpt from the article" }),
+    authors: z.array(ExtractedAuthorSchema).openapi({ description: "Authors extracted via scraping + LLM analysis" }),
+    publishedAt: z.string().nullable().openapi({ description: "Publication date extracted from article metadata", example: "2025-03-15T10:00:00Z" }),
   })
   .openapi("DiscoveredArticle");
 
@@ -265,6 +265,7 @@ registry.registerPath({
   path: "/v1/articles",
   operationId: "createArticle",
   summary: "Create or upsert an article by URL",
+  description: "Inserts a new article or updates an existing one based on the articleUrl (unique key). Returns the full article record.",
   request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: CreateArticleBodySchema } } } },
   responses: {
     200: { description: "Article upserted", content: { "application/json": { schema: ArticleSchema } } },
@@ -309,6 +310,7 @@ registry.registerPath({
   path: "/v1/articles/bulk",
   operationId: "bulkCreateArticles",
   summary: "Bulk upsert articles",
+  description: "Upserts multiple articles in a single transaction. Each article is matched by articleUrl.",
   request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: BulkCreateArticlesBodySchema } } } },
   responses: {
     200: { description: "Articles upserted", content: { "application/json": { schema: z.object({ articles: z.array(ArticleSchema) }) } } },
@@ -364,6 +366,7 @@ registry.registerPath({
   path: "/v1/discoveries",
   operationId: "createDiscovery",
   summary: "Link an article to a campaign context (org/brand/feature/campaign)",
+  description: "Creates a discovery record that links an article to a specific org/brand/campaign context. Requires x-brand-id and x-campaign-id headers. Optionally associates the discovery with an outlet, journalist, or topic.",
   request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: CreateDiscoveryBodySchema } } } },
   responses: {
     200: { description: "Discovery created", content: { "application/json": { schema: ArticleDiscoverySchema } } },
@@ -462,6 +465,7 @@ registry.registerPath({
   path: "/v1/discover/outlet-articles",
   operationId: "discoverOutletArticles",
   summary: "Discover recent articles from an outlet via Google News + scraping, and create scoped discoveries",
+  description: "Pipeline endpoint: (1) searches Google News for recent articles from the given outlet domain, (2) scrapes each article URL to extract authors and publication dates via LLM, (3) upserts the articles in the database, and (4) creates discovery records scoped to the campaign (x-brand-id, x-campaign-id headers required). Returns the discovered articles with extracted author details.",
   request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: DiscoverOutletArticlesBodySchema } } } },
   responses: {
     200: { description: "Discovered articles with extracted authors", content: { "application/json": { schema: z.object({ articles: z.array(DiscoveredArticleSchema) }) } } },
@@ -475,6 +479,7 @@ registry.registerPath({
   path: "/v1/discover/journalist-publications",
   operationId: "discoverJournalistPublications",
   summary: "Discover recent publications by a journalist and create scoped discoveries",
+  description: "Pipeline endpoint: (1) searches Google News for recent articles by the given journalist (by name), (2) scrapes each article URL to extract authors and publication dates via LLM, (3) upserts the articles in the database, and (4) creates discovery records scoped to the campaign and journalist (x-brand-id, x-campaign-id headers required). Ideal for enriching pitch generation with a journalist's recent work.",
   request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: DiscoverJournalistPublicationsBodySchema } } } },
   responses: {
     200: { description: "Journalist publications with extracted authors", content: { "application/json": { schema: z.object({ articles: z.array(DiscoveredArticleSchema) }) } } },
@@ -490,6 +495,7 @@ registry.registerPath({
   path: "/internal/articles/by-urls",
   operationId: "getArticlesByUrls",
   summary: "Batch lookup articles by URLs",
+  description: "Returns all articles matching the given URLs. Used by other services to check which articles are already indexed. Pass URLs as a comma-separated query parameter.",
   request: {
     headers: IdentityHeadersSchema,
     query: z.object({ urls: z.string().describe("Comma-separated list of URLs") }),
