@@ -39,71 +39,95 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Unique article identifier",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
           },
           "articleUrl": {
             "type": "string",
-            "format": "uri"
+            "format": "uri",
+            "description": "Canonical URL of the article",
+            "example": "https://techcrunch.com/2025/03/15/ai-funding-roundup"
           },
           "snippet": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Short text excerpt from the article or search result"
           },
           "ogDescription": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "OpenGraph og:description meta tag value"
           },
           "twitterCreator": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Twitter/X @handle of the article creator",
+            "example": "@johndoe"
           },
           "newsKeywords": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Comma-separated news keywords meta tag"
           },
           "articlePublished": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Published date from article metadata",
+            "example": "2025-03-15T10:00:00Z"
           },
           "articleChannel": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Channel or vertical the article belongs to",
+            "example": "Technology"
           },
           "twitterTitle": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Twitter/X card title meta tag"
           },
           "articleSection": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Section of the publication",
+            "example": "Startups"
           },
           "author": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Serialized author data extracted via scraping (JSON array of ExtractedAuthor objects)"
           },
           "ogTitle": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "OpenGraph og:title meta tag value",
+            "example": "AI Funding Hits Record High in Q1 2025"
           },
           "articleAuthor": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Raw author string from article:author meta tag"
           },
           "twitterDescription": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Twitter/X card description meta tag"
           },
           "articleModified": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Last modified date from article metadata"
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "When this article record was first created"
           },
           "updatedAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "When this article record was last updated"
           }
         },
         "required": [
@@ -177,46 +201,61 @@
         "properties": {
           "articleUrl": {
             "type": "string",
-            "format": "uri"
+            "format": "uri",
+            "description": "Canonical URL of the article (used as upsert key)",
+            "example": "https://techcrunch.com/2025/03/15/ai-funding-roundup"
           },
           "snippet": {
-            "type": "string"
+            "type": "string",
+            "description": "Short text excerpt from the article"
           },
           "ogDescription": {
-            "type": "string"
+            "type": "string",
+            "description": "OpenGraph og:description meta tag"
           },
           "twitterCreator": {
-            "type": "string"
+            "type": "string",
+            "description": "Twitter/X @handle of the creator"
           },
           "newsKeywords": {
-            "type": "string"
+            "type": "string",
+            "description": "Comma-separated news keywords"
           },
           "articlePublished": {
-            "type": "string"
+            "type": "string",
+            "description": "Published date string from metadata"
           },
           "articleChannel": {
-            "type": "string"
+            "type": "string",
+            "description": "Channel or vertical"
           },
           "twitterTitle": {
-            "type": "string"
+            "type": "string",
+            "description": "Twitter/X card title"
           },
           "articleSection": {
-            "type": "string"
+            "type": "string",
+            "description": "Section of the publication"
           },
           "author": {
-            "type": "string"
+            "type": "string",
+            "description": "Serialized author data"
           },
           "ogTitle": {
-            "type": "string"
+            "type": "string",
+            "description": "OpenGraph og:title"
           },
           "articleAuthor": {
-            "type": "string"
+            "type": "string",
+            "description": "Raw author string from article:author meta tag"
           },
           "twitterDescription": {
-            "type": "string"
+            "type": "string",
+            "description": "Twitter/X card description"
           },
           "articleModified": {
-            "type": "string"
+            "type": "string",
+            "description": "Last modified date from metadata"
           }
         },
         "required": [
@@ -230,7 +269,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateArticleBody"
-            }
+            },
+            "description": "Array of articles to upsert"
           }
         },
         "required": [
@@ -242,18 +282,23 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Unique topic identifier"
           },
           "topicName": {
-            "type": "string"
+            "type": "string",
+            "description": "Human-readable topic name",
+            "example": "Artificial Intelligence"
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "When this topic was created"
           },
           "updatedAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "When this topic was last updated"
           }
         },
         "required": [
@@ -268,7 +313,9 @@
         "properties": {
           "topicName": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Topic name (used as upsert key)",
+            "example": "Artificial Intelligence"
           }
         },
         "required": [
@@ -282,7 +329,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateTopicBody"
-            }
+            },
+            "description": "Array of topics to upsert"
           }
         },
         "required": [
@@ -294,49 +342,61 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Unique discovery record identifier"
           },
           "articleId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "ID of the discovered article"
           },
           "orgId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Organization that owns this discovery"
           },
           "brandId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Brand this discovery is scoped to"
           },
           "featureSlug": {
-            "type": "string"
+            "type": "string",
+            "description": "Feature that triggered this discovery",
+            "example": "press-outreach-v3"
           },
           "workflowSlug": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Workflow that triggered this discovery"
           },
           "campaignId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Campaign this discovery belongs to"
           },
           "outletId": {
             "type": "string",
             "nullable": true,
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Outlet linked to this discovery (if from outlet discovery)"
           },
           "journalistId": {
             "type": "string",
             "nullable": true,
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Journalist linked to this discovery (if from journalist discovery)"
           },
           "topicId": {
             "type": "string",
             "nullable": true,
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Topic linked to this discovery"
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "When this discovery was created"
           }
         },
         "required": [
@@ -358,19 +418,23 @@
         "properties": {
           "articleId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "ID of the article to link"
           },
           "outletId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Outlet to associate with this discovery"
           },
           "journalistId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Journalist to associate with this discovery"
           },
           "topicId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Topic to associate with this discovery"
           }
         },
         "required": [
@@ -384,7 +448,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateDiscoveryBody"
-            }
+            },
+            "description": "Array of discovery records to create"
           }
         },
         "required": [
@@ -396,36 +461,44 @@
         "properties": {
           "articleId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Article identifier"
           },
           "articleUrl": {
-            "type": "string"
+            "type": "string",
+            "description": "Canonical URL of the article"
           },
           "computedTitle": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Best-effort title derived from og:title, twitter:title, or snippet"
           },
           "computedLargestContent": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Longest content field available (for display/preview)"
           },
           "computedAuthors": {
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "description": "Deduplicated list of author names extracted from all metadata sources"
           },
           "computedPublishedAt": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Best-effort publication date from available metadata"
           },
           "lastActivityAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Most recent update across all linked records"
           },
           "articleCreatedAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "When the article was first indexed"
           }
         },
         "required": [
@@ -444,18 +517,22 @@
         "properties": {
           "query": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Full-text search query",
+            "example": "AI funding startup"
           },
           "limit": {
             "type": "integer",
             "minimum": 1,
             "maximum": 100,
-            "default": 20
+            "default": 20,
+            "description": "Max results to return (default 20, max 100)"
           },
           "offset": {
             "type": "integer",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "description": "Number of results to skip for pagination"
           }
         },
         "required": [
@@ -467,28 +544,36 @@
         "properties": {
           "articleId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "ID of the upserted article record"
           },
           "articleUrl": {
-            "type": "string"
+            "type": "string",
+            "description": "URL of the discovered article",
+            "example": "https://techcrunch.com/2025/03/15/ai-funding-roundup"
           },
           "title": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Article title from OpenGraph or search result"
           },
           "snippet": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Short excerpt from the article"
           },
           "authors": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ExtractedAuthor"
-            }
+            },
+            "description": "Authors extracted via scraping + LLM analysis"
           },
           "publishedAt": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Publication date extracted from article metadata",
+            "example": "2025-03-15T10:00:00Z"
           }
         },
         "required": [
@@ -509,15 +594,18 @@
               "person",
               "organization"
             ],
-            "description": "Whether this author is a person or an organization (news agency, editorial team, etc.)"
+            "description": "Whether this author is a person or an organization (news agency, editorial team, etc.)",
+            "example": "person"
           },
           "firstName": {
             "type": "string",
-            "description": "First name (empty for organizations or single-name authors)"
+            "description": "First name (empty string for organizations or single-name authors)",
+            "example": "Sarah"
           },
           "lastName": {
             "type": "string",
-            "description": "Last name, or full name for organizations"
+            "description": "Last name, or full name for organizations",
+            "example": "Perez"
           }
         },
         "required": [
@@ -553,24 +641,26 @@
           "journalistFirstName": {
             "type": "string",
             "minLength": 1,
-            "description": "Journalist first name"
+            "description": "Journalist first name",
+            "example": "Sarah"
           },
           "journalistLastName": {
             "type": "string",
             "minLength": 1,
-            "description": "Journalist last name"
+            "description": "Journalist last name",
+            "example": "Perez"
           },
           "journalistId": {
             "type": "string",
             "format": "uuid",
-            "description": "Journalist UUID for linking"
+            "description": "Journalist UUID for linking discoveries back to the journalist record"
           },
           "maxResults": {
             "type": "integer",
             "minimum": 1,
             "maximum": 20,
             "default": 10,
-            "description": "Max publications to find (default 10)"
+            "description": "Max publications to find (default 10, max 20)"
           }
         },
         "required": [
@@ -681,6 +771,7 @@
       "post": {
         "operationId": "createArticle",
         "summary": "Create or upsert an article by URL",
+        "description": "Inserts a new article or updates an existing one based on the articleUrl (unique key). Returns the full article record.",
         "parameters": [
           {
             "schema": {
@@ -1063,6 +1154,7 @@
       "post": {
         "operationId": "bulkCreateArticles",
         "summary": "Bulk upsert articles",
+        "description": "Upserts multiple articles in a single transaction. Each article is matched by articleUrl.",
         "parameters": [
           {
             "schema": {
@@ -1571,6 +1663,7 @@
       "post": {
         "operationId": "createDiscovery",
         "summary": "Link an article to a campaign context (org/brand/feature/campaign)",
+        "description": "Creates a discovery record that links an article to a specific org/brand/campaign context. Requires x-brand-id and x-campaign-id headers. Optionally associates the discovery with an outlet, journalist, or topic.",
         "parameters": [
           {
             "schema": {
@@ -2292,6 +2385,7 @@
       "post": {
         "operationId": "discoverOutletArticles",
         "summary": "Discover recent articles from an outlet via Google News + scraping, and create scoped discoveries",
+        "description": "Pipeline endpoint: (1) searches Google News for recent articles from the given outlet domain, (2) scrapes each article URL to extract authors and publication dates via LLM, (3) upserts the articles in the database, and (4) creates discovery records scoped to the campaign (x-brand-id, x-campaign-id headers required). Returns the discovered articles with extracted author details.",
         "parameters": [
           {
             "schema": {
@@ -2427,6 +2521,7 @@
       "post": {
         "operationId": "discoverJournalistPublications",
         "summary": "Discover recent publications by a journalist and create scoped discoveries",
+        "description": "Pipeline endpoint: (1) searches Google News for recent articles by the given journalist (by name), (2) scrapes each article URL to extract authors and publication dates via LLM, (3) upserts the articles in the database, and (4) creates discovery records scoped to the campaign and journalist (x-brand-id, x-campaign-id headers required). Ideal for enriching pitch generation with a journalist's recent work.",
         "parameters": [
           {
             "schema": {
@@ -2562,6 +2657,7 @@
       "get": {
         "operationId": "getArticlesByUrls",
         "summary": "Batch lookup articles by URLs",
+        "description": "Returns all articles matching the given URLs. Used by other services to check which articles are already indexed. Pass URLs as a comma-separated query parameter.",
         "parameters": [
           {
             "schema": {
