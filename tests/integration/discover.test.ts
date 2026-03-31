@@ -324,6 +324,45 @@ describe("POST /v1/discover/journalist-publications", () => {
     expect(res.body.error).toContain("x-campaign-id");
   });
 
+  it("includes outletDomain as site: filter in Google News query when provided", async () => {
+    mockSearchNews.mockResolvedValue([]);
+
+    await request(app)
+      .post("/v1/discover/journalist-publications")
+      .set(getAuthHeaders())
+      .send({
+        journalistFirstName: "Sarah",
+        journalistLastName: "Perez",
+        journalistId,
+        outletDomain: "techcrunch.com",
+      });
+
+    expect(mockSearchNews).toHaveBeenCalledWith(
+      '"Sarah Perez" site:techcrunch.com',
+      10,
+      expect.anything(),
+    );
+  });
+
+  it("omits site: filter from query when outletDomain not provided", async () => {
+    mockSearchNews.mockResolvedValue([]);
+
+    await request(app)
+      .post("/v1/discover/journalist-publications")
+      .set(getAuthHeaders())
+      .send({
+        journalistFirstName: "Sarah",
+        journalistLastName: "Perez",
+        journalistId,
+      });
+
+    expect(mockSearchNews).toHaveBeenCalledWith(
+      '"Sarah Perez"',
+      10,
+      expect.anything(),
+    );
+  });
+
   it("respects custom maxResults", async () => {
     mockSearchNews.mockResolvedValue([]);
 
