@@ -251,6 +251,7 @@ describe("POST /v1/discover/journalist-publications", () => {
         journalistFirstName: "Sarah",
         journalistLastName: "Perez",
         journalistId,
+        outletDomain: "wired.com",
       });
 
     expect(res.status).toBe(200);
@@ -265,9 +266,9 @@ describe("POST /v1/discover/journalist-publications", () => {
     expect(discoveries[0].brandId).toBe(TEST_BRAND_ID);
     expect(discoveries[0].campaignId).toBe(TEST_CAMPAIGN_ID);
 
-    // Verify Google was called with quoted name
+    // Verify Google was called with quoted name + site: filter
     expect(mockSearchNews).toHaveBeenCalledWith(
-      '"Sarah Perez"',
+      '"Sarah Perez" site:wired.com',
       10,
       expect.objectContaining({ orgId: expect.any(String) }),
     );
@@ -283,6 +284,7 @@ describe("POST /v1/discover/journalist-publications", () => {
         journalistFirstName: "Unknown",
         journalistLastName: "Person",
         journalistId,
+        outletDomain: "example.com",
       });
 
     expect(res.status).toBe(200);
@@ -305,7 +307,7 @@ describe("POST /v1/discover/journalist-publications", () => {
     const res = await request(app)
       .post("/v1/discover/journalist-publications")
       .set(headers)
-      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId });
+      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId, outletDomain: "techcrunch.com" });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toContain("x-brand-id");
@@ -318,13 +320,13 @@ describe("POST /v1/discover/journalist-publications", () => {
     const res = await request(app)
       .post("/v1/discover/journalist-publications")
       .set(headers)
-      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId });
+      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId, outletDomain: "techcrunch.com" });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toContain("x-campaign-id");
   });
 
-  it("includes outletDomain as site: filter in Google News query when provided", async () => {
+  it("uses outletDomain as site: filter in Google News query", async () => {
     mockSearchNews.mockResolvedValue([]);
 
     await request(app)
@@ -344,10 +346,8 @@ describe("POST /v1/discover/journalist-publications", () => {
     );
   });
 
-  it("omits site: filter from query when outletDomain not provided", async () => {
-    mockSearchNews.mockResolvedValue([]);
-
-    await request(app)
+  it("returns 400 when outletDomain is missing", async () => {
+    const res = await request(app)
       .post("/v1/discover/journalist-publications")
       .set(getAuthHeaders())
       .send({
@@ -356,11 +356,7 @@ describe("POST /v1/discover/journalist-publications", () => {
         journalistId,
       });
 
-    expect(mockSearchNews).toHaveBeenCalledWith(
-      '"Sarah Perez"',
-      10,
-      expect.anything(),
-    );
+    expect(res.status).toBe(400);
   });
 
   it("respects custom maxResults", async () => {
@@ -373,10 +369,11 @@ describe("POST /v1/discover/journalist-publications", () => {
         journalistFirstName: "Sarah",
         journalistLastName: "Perez",
         journalistId,
+        outletDomain: "techcrunch.com",
         maxResults: 5,
       });
 
-    expect(mockSearchNews).toHaveBeenCalledWith('"Sarah Perez"', 5, expect.anything());
+    expect(mockSearchNews).toHaveBeenCalledWith('"Sarah Perez" site:techcrunch.com', 5, expect.anything());
   });
 
   it("forwards all identity headers to downstream services", async () => {
@@ -385,10 +382,10 @@ describe("POST /v1/discover/journalist-publications", () => {
     await request(app)
       .post("/v1/discover/journalist-publications")
       .set(getAuthHeaders())
-      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId });
+      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId, outletDomain: "techcrunch.com" });
 
     expect(mockSearchNews).toHaveBeenCalledWith(
-      '"Sarah Perez"',
+      '"Sarah Perez" site:techcrunch.com',
       10,
       expect.objectContaining({
         orgId: TEST_ORG_ID,
@@ -420,6 +417,7 @@ describe("POST /v1/discover/journalist-publications", () => {
       journalistFirstName: "Sarah",
       journalistLastName: "Perez",
       journalistId,
+      outletDomain: "example.com",
     };
 
     // Call twice

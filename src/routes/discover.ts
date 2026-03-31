@@ -164,10 +164,8 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
 
     const { journalistFirstName, journalistLastName, journalistId, outletDomain, maxResults } = parsed.data;
 
-    // Step 1: Search Google News for this journalist's articles
-    const query = outletDomain
-      ? `"${journalistFirstName} ${journalistLastName}" site:${outletDomain}`
-      : `"${journalistFirstName} ${journalistLastName}"`;
+    // Step 1: Search Google News for this journalist's articles scoped to outlet
+    const query = `"${journalistFirstName} ${journalistLastName}" site:${outletDomain}`;
     const newsResults = await searchNews(query, maxResults, identityHeaders);
 
     if (newsResults.length === 0) {
