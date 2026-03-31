@@ -1,11 +1,15 @@
 import { Router } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { articles, articleDiscoveries } from "../db/schema.js";
 import { requireApiKey } from "../middleware/auth.js";
 import { CreateDiscoveryBodySchema, BulkCreateDiscoveriesBodySchema } from "../schemas.js";
 
 const router = Router();
+
+function parseBrandIds(raw: string): string[] {
+  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+}
 
 // POST /v1/discoveries — create a single discovery record
 router.post("/v1/discoveries", requireApiKey, async (req, res) => {
@@ -17,22 +21,24 @@ router.post("/v1/discoveries", requireApiKey, async (req, res) => {
     }
 
     const orgId = req.headers["x-org-id"] as string;
-    const brandId = req.headers["x-brand-id"] as string | undefined;
+    const rawBrandId = req.headers["x-brand-id"] as string | undefined;
     const campaignId = req.headers["x-campaign-id"] as string | undefined;
     const featureSlug = req.headers["x-feature-slug"] as string | undefined;
     const workflowSlug = req.headers["x-workflow-slug"] as string | undefined;
 
-    if (!brandId || !campaignId) {
+    if (!rawBrandId || !campaignId) {
       res.status(400).json({ error: "x-brand-id and x-campaign-id headers are required" });
       return;
     }
+
+    const brandIds = parseBrandIds(rawBrandId);
 
     const [discovery] = await db
       .insert(articleDiscoveries)
       .values({
         articleId: parsed.data.articleId,
         orgId,
-        brandId,
+        brandIds,
         featureSlug: featureSlug ?? "unknown",
         workflowSlug: workflowSlug ?? null,
         campaignId,
@@ -64,20 +70,22 @@ router.post("/v1/discoveries/bulk", requireApiKey, async (req, res) => {
     }
 
     const orgId = req.headers["x-org-id"] as string;
-    const brandId = req.headers["x-brand-id"] as string | undefined;
+    const rawBrandId = req.headers["x-brand-id"] as string | undefined;
     const campaignId = req.headers["x-campaign-id"] as string | undefined;
     const featureSlug = req.headers["x-feature-slug"] as string | undefined;
     const workflowSlug = req.headers["x-workflow-slug"] as string | undefined;
 
-    if (!brandId || !campaignId) {
+    if (!rawBrandId || !campaignId) {
       res.status(400).json({ error: "x-brand-id and x-campaign-id headers are required" });
       return;
     }
 
+    const brandIds = parseBrandIds(rawBrandId);
+
     const values = parsed.data.discoveries.map((d) => ({
       articleId: d.articleId,
       orgId,
-      brandId,
+      brandIds,
       featureSlug: featureSlug ?? "unknown",
       workflowSlug: workflowSlug ?? null,
       campaignId,
@@ -108,7 +116,7 @@ router.get("/v1/discoveries", async (req, res) => {
 
     const conditions = [eq(articleDiscoveries.orgId, orgId)];
 
-    if (req.query.brandId) conditions.push(eq(articleDiscoveries.brandId, req.query.brandId as string));
+    if (req.query.brandId) conditions.push(sql`${req.query.brandId as string} = ANY(${articleDiscoveries.brandIds})`);
     if (req.query.campaignId) conditions.push(eq(articleDiscoveries.campaignId, req.query.campaignId as string));
     if (req.query.outletId) conditions.push(eq(articleDiscoveries.outletId, req.query.outletId as string));
     if (req.query.journalistId) conditions.push(eq(articleDiscoveries.journalistId, req.query.journalistId as string));

@@ -355,10 +355,16 @@
             "format": "uuid",
             "description": "Organization that owns this discovery"
           },
-          "brandId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Brand this discovery is scoped to"
+          "brandIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Brands this discovery is scoped to",
+            "example": [
+              "e0000000-0000-4000-8000-000000000001"
+            ]
           },
           "featureSlug": {
             "type": "string",
@@ -403,7 +409,7 @@
           "id",
           "articleId",
           "orgId",
-          "brandId",
+          "brandIds",
           "featureSlug",
           "workflowSlug",
           "campaignId",
@@ -830,11 +836,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -972,11 +978,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -1097,11 +1103,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -1213,11 +1219,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -1348,11 +1354,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -1470,11 +1476,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -1586,11 +1592,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -1722,11 +1728,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -1909,11 +1915,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -2037,11 +2043,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -2192,11 +2198,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -2308,11 +2314,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -2444,11 +2450,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -2580,11 +2586,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -2726,11 +2732,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },
@@ -2925,11 +2931,11 @@
           {
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "Brand UUID for scoping"
+              "description": "Comma-separated brand UUIDs for scoping",
+              "example": "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002"
             },
             "required": false,
-            "description": "Brand UUID for scoping",
+            "description": "Comma-separated brand UUIDs for scoping",
             "name": "x-brand-id",
             "in": "header"
           },

@@ -39,7 +39,7 @@ export async function insertTestTopic(topicName: string) {
 export async function insertTestDiscovery(data: {
   articleId: string;
   orgId: string;
-  brandId: string;
+  brandIds: string[];
   featureSlug: string;
   campaignId: string;
   workflowSlug?: string | null;
@@ -52,7 +52,7 @@ export async function insertTestDiscovery(data: {
     .values({
       articleId: data.articleId,
       orgId: data.orgId,
-      brandId: data.brandId,
+      brandIds: data.brandIds,
       featureSlug: data.featureSlug,
       workflowSlug: data.workflowSlug ?? null,
       campaignId: data.campaignId,

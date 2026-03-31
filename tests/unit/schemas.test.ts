@@ -202,7 +202,7 @@ describe("DiscoverJournalistPublicationsBodySchema", () => {
     const result = DiscoverJournalistPublicationsBodySchema.safeParse({
       journalistFirstName: "Sarah",
       journalistLastName: "Perez",
-      journalistId: "550e8400-e29b-41d4-a716-446655440000",
+      outletDomain: "techcrunch.com",
     });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -214,7 +214,7 @@ describe("DiscoverJournalistPublicationsBodySchema", () => {
     const result = DiscoverJournalistPublicationsBodySchema.safeParse({
       journalistFirstName: "Sarah",
       journalistLastName: "Perez",
-      journalistId: "550e8400-e29b-41d4-a716-446655440000",
+      outletDomain: "techcrunch.com",
       maxResults: 5,
     });
     expect(result.success).toBe(true);
@@ -223,16 +223,15 @@ describe("DiscoverJournalistPublicationsBodySchema", () => {
   it("rejects missing journalistLastName", () => {
     const result = DiscoverJournalistPublicationsBodySchema.safeParse({
       journalistFirstName: "Sarah",
-      journalistId: "550e8400-e29b-41d4-a716-446655440000",
+      outletDomain: "techcrunch.com",
     });
     expect(result.success).toBe(false);
   });
 
-  it("rejects invalid journalistId", () => {
+  it("rejects missing outletDomain", () => {
     const result = DiscoverJournalistPublicationsBodySchema.safeParse({
       journalistFirstName: "Sarah",
       journalistLastName: "Perez",
-      journalistId: "not-a-uuid",
     });
     expect(result.success).toBe(false);
   });

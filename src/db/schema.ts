@@ -47,7 +47,7 @@ export const articleDiscoveries = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     articleId: uuid("article_id").notNull().references(() => articles.id),
     orgId: uuid("org_id").notNull(),
-    brandId: uuid("brand_id").notNull(),
+    brandIds: uuid("brand_ids").array().notNull(),
     featureSlug: text("feature_slug").notNull(),
     workflowSlug: text("workflow_slug"),
     campaignId: uuid("campaign_id").notNull(),
@@ -59,7 +59,7 @@ export const articleDiscoveries = pgTable(
   (table) => [
     index("idx_ad_article").on(table.articleId),
     index("idx_ad_org").on(table.orgId),
-    index("idx_ad_brand").on(table.brandId),
+    index("idx_ad_brand_ids").using("gin", table.brandIds),
     index("idx_ad_campaign").on(table.campaignId),
     index("idx_ad_outlet").on(table.outletId),
     index("idx_ad_journalist").on(table.journalistId),

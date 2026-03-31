@@ -66,7 +66,7 @@ export const ArticleDiscoverySchema = z
     id: z.string().uuid().openapi({ description: "Unique discovery record identifier" }),
     articleId: z.string().uuid().openapi({ description: "ID of the discovered article" }),
     orgId: z.string().uuid().openapi({ description: "Organization that owns this discovery" }),
-    brandId: z.string().uuid().openapi({ description: "Brand this discovery is scoped to" }),
+    brandIds: z.array(z.string().uuid()).openapi({ description: "Brands this discovery is scoped to", example: ["e0000000-0000-4000-8000-000000000001"] }),
     featureSlug: z.string().openapi({ description: "Feature that triggered this discovery", example: "press-outreach-v3" }),
     workflowSlug: z.string().nullable().openapi({ description: "Workflow that triggered this discovery" }),
     campaignId: z.string().uuid().openapi({ description: "Campaign this discovery belongs to" }),
@@ -239,7 +239,7 @@ export const IdentityHeadersSchema = z.object({
   "x-run-id": z.string().uuid().openapi({ description: "Run UUID from runs-service" }),
   "x-workflow-slug": z.string().optional().openapi({ description: "Workflow slug for tracking" }),
   "x-feature-slug": z.string().optional().openapi({ description: "Feature slug for tracking/filtering" }),
-  "x-brand-id": z.string().uuid().optional().openapi({ description: "Brand UUID for scoping" }),
+  "x-brand-id": z.string().optional().openapi({ description: "Comma-separated brand UUIDs for scoping", example: "e0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000002" }),
   "x-campaign-id": z.string().uuid().optional().openapi({ description: "Campaign UUID for inter-service propagation" }),
 });
 

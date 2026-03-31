@@ -82,7 +82,7 @@ describe("POST /v1/discover/outlet-articles", () => {
     const discoveries = await db.select().from(articleDiscoveries);
     expect(discoveries).toHaveLength(2);
     expect(discoveries[0].orgId).toBe(TEST_ORG_ID);
-    expect(discoveries[0].brandId).toBe(TEST_BRAND_ID);
+    expect(discoveries[0].brandIds).toEqual([TEST_BRAND_ID]);
     expect(discoveries[0].campaignId).toBe(TEST_CAMPAIGN_ID);
     expect(discoveries[0].featureSlug).toBe(TEST_FEATURE_SLUG);
 
@@ -256,7 +256,7 @@ describe("POST /v1/discover/journalist-publications", () => {
     // Verify discovery records were created
     const discoveries = await db.select().from(articleDiscoveries);
     expect(discoveries).toHaveLength(2);
-    expect(discoveries[0].brandId).toBe(TEST_BRAND_ID);
+    expect(discoveries[0].brandIds).toEqual([TEST_BRAND_ID]);
     expect(discoveries[0].campaignId).toBe(TEST_CAMPAIGN_ID);
     expect(discoveries[0].journalistId).toBeNull();
 
