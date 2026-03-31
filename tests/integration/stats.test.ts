@@ -62,7 +62,7 @@ async function seedDiscoveries() {
   await insertTestDiscovery({
     articleId: a1.id,
     orgId: TEST_ORG_ID,
-    brandId: TEST_BRAND_ID,
+    brandIds: [TEST_BRAND_ID],
     featureSlug: TEST_FEATURE_SLUG,
     workflowSlug: TEST_WORKFLOW_SLUG,
     campaignId: TEST_CAMPAIGN_ID,
@@ -73,7 +73,7 @@ async function seedDiscoveries() {
   await insertTestDiscovery({
     articleId: a2.id,
     orgId: TEST_ORG_ID,
-    brandId: TEST_BRAND_ID,
+    brandIds: [TEST_BRAND_ID],
     featureSlug: "other-feature",
     workflowSlug: "other-workflow",
     campaignId: TEST_CAMPAIGN_ID,
@@ -83,7 +83,7 @@ async function seedDiscoveries() {
   await insertTestDiscovery({
     articleId: a3.id,
     orgId: TEST_ORG_ID,
-    brandId: OTHER_BRAND_ID,
+    brandIds: [OTHER_BRAND_ID],
     featureSlug: TEST_FEATURE_SLUG,
     workflowSlug: TEST_WORKFLOW_SLUG,
     campaignId: OTHER_CAMPAIGN_ID,

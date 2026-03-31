@@ -151,6 +151,21 @@ describe("Identity middleware", () => {
     expect(res.body.error).toContain("x-brand-id");
   });
 
+  it("passes through with CSV x-brand-id (multiple valid UUIDs)", async () => {
+    const res = await request(app)
+      .get("/v1/articles")
+      .set({ ...baseHeaders, "x-brand-id": `${TEST_BRAND_ID},e0000000-0000-4000-8000-000000000099` });
+    expect(res.status).not.toBe(400);
+  });
+
+  it("returns 400 when x-brand-id CSV contains an invalid UUID", async () => {
+    const res = await request(app)
+      .get("/v1/articles")
+      .set({ ...baseHeaders, "x-brand-id": `${TEST_BRAND_ID},not-a-uuid` });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("x-brand-id");
+  });
+
   // x-workflow-slug
 
   it("passes through with valid x-workflow-slug", async () => {

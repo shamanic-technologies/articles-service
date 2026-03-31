@@ -26,7 +26,7 @@ describe("POST /v1/discoveries", () => {
     expect(res.status).toBe(200);
     expect(res.body.articleId).toBe(article.id);
     expect(res.body.orgId).toBe(TEST_ORG_ID);
-    expect(res.body.brandId).toBe(TEST_BRAND_ID);
+    expect(res.body.brandIds).toEqual([TEST_BRAND_ID]);
     expect(res.body.featureSlug).toBe(TEST_FEATURE_SLUG);
     expect(res.body.campaignId).toBe(TEST_CAMPAIGN_ID);
     expect(res.body.id).toBeDefined();
@@ -111,7 +111,7 @@ describe("POST /v1/discoveries/bulk", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.discoveries).toHaveLength(2);
-    expect(res.body.discoveries[0].brandId).toBe(TEST_BRAND_ID);
+    expect(res.body.discoveries[0].brandIds).toEqual([TEST_BRAND_ID]);
     expect(res.body.discoveries[0].campaignId).toBe(TEST_CAMPAIGN_ID);
   });
 
@@ -146,7 +146,7 @@ describe("GET /v1/discoveries", () => {
     await insertTestDiscovery({
       articleId: article.id,
       orgId: TEST_ORG_ID,
-      brandId: TEST_BRAND_ID,
+      brandIds: [TEST_BRAND_ID],
       featureSlug: TEST_FEATURE_SLUG,
       campaignId: TEST_CAMPAIGN_ID,
     });
@@ -165,7 +165,7 @@ describe("GET /v1/discoveries", () => {
     await insertTestDiscovery({
       articleId: article.id,
       orgId: TEST_ORG_ID,
-      brandId: TEST_BRAND_ID,
+      brandIds: [TEST_BRAND_ID],
       featureSlug: TEST_FEATURE_SLUG,
       campaignId: TEST_CAMPAIGN_ID,
     });
@@ -174,7 +174,7 @@ describe("GET /v1/discoveries", () => {
     await insertTestDiscovery({
       articleId: article2.id,
       orgId: TEST_ORG_ID,
-      brandId: otherBrandId,
+      brandIds: [otherBrandId],
       featureSlug: TEST_FEATURE_SLUG,
       campaignId: TEST_CAMPAIGN_ID,
     });
@@ -185,7 +185,7 @@ describe("GET /v1/discoveries", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.discoveries).toHaveLength(1);
-    expect(res.body.discoveries[0].discovery.brandId).toBe(TEST_BRAND_ID);
+    expect(res.body.discoveries[0].discovery.brandIds).toEqual([TEST_BRAND_ID]);
   });
 
   it("filters by campaignId", async () => {
@@ -193,7 +193,7 @@ describe("GET /v1/discoveries", () => {
     await insertTestDiscovery({
       articleId: article.id,
       orgId: TEST_ORG_ID,
-      brandId: TEST_BRAND_ID,
+      brandIds: [TEST_BRAND_ID],
       featureSlug: TEST_FEATURE_SLUG,
       campaignId: TEST_CAMPAIGN_ID,
     });
@@ -212,7 +212,7 @@ describe("GET /v1/discoveries", () => {
     await insertTestDiscovery({
       articleId: article.id,
       orgId: TEST_ORG_ID,
-      brandId: TEST_BRAND_ID,
+      brandIds: [TEST_BRAND_ID],
       featureSlug: TEST_FEATURE_SLUG,
       campaignId: TEST_CAMPAIGN_ID,
       journalistId,
@@ -232,7 +232,7 @@ describe("GET /v1/discoveries", () => {
     await insertTestDiscovery({
       articleId: article.id,
       orgId: "a0000000-0000-0000-0000-000000000099",
-      brandId: TEST_BRAND_ID,
+      brandIds: [TEST_BRAND_ID],
       featureSlug: TEST_FEATURE_SLUG,
       campaignId: TEST_CAMPAIGN_ID,
     });

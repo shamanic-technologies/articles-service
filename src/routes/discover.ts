@@ -24,6 +24,10 @@ function getIdentityHeaders(req: import("express").Request): IdentityHeaders {
   };
 }
 
+function parseBrandIds(raw: string): string[] {
+  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
 // POST /v1/discover/outlet-articles
 // Finds recent articles from an outlet via Google News, extracts authors via scraping service
 router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
@@ -41,6 +45,8 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
       res.status(400).json({ error: "x-brand-id and x-campaign-id headers are required" });
       return;
     }
+
+    const brandIds = parseBrandIds(brandId);
 
     const { outletDomain, maxArticles } = parsed.data;
 
@@ -106,7 +112,7 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
     const discoveryValues = upserted.map((article) => ({
       articleId: article.id,
       orgId: identityHeaders.orgId,
-      brandId,
+      brandIds,
       featureSlug: identityHeaders.featureSlug ?? "unknown",
       campaignId,
       outletId: null as string | null,
@@ -161,6 +167,8 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
       res.status(400).json({ error: "x-brand-id and x-campaign-id headers are required" });
       return;
     }
+
+    const brandIds = parseBrandIds(brandId);
 
     const { journalistFirstName, journalistLastName, outletDomain, maxResults } = parsed.data;
 
@@ -223,7 +231,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
     const discoveryValues = upserted.map((a) => ({
       articleId: a.id,
       orgId: identityHeaders.orgId,
-      brandId,
+      brandIds,
       featureSlug: identityHeaders.featureSlug ?? "unknown",
       campaignId,
       outletId: null as string | null,

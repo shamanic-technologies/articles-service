@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, and, inArray, sql, count, countDistinct } from "drizzle-orm";
+import { eq, and, inArray, sql, count, countDistinct, type SQL } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { articleDiscoveries } from "../db/schema.js";
 import { requireApiKey } from "../middleware/auth.js";
@@ -40,10 +40,10 @@ type BuildConditionsData = {
 };
 
 function buildConditions(data: BuildConditionsData) {
-  const conditions = [];
+  const conditions: SQL[] = [];
 
   if (data.orgId) conditions.push(eq(articleDiscoveries.orgId, data.orgId));
-  if (data.brandId) conditions.push(eq(articleDiscoveries.brandId, data.brandId));
+  if (data.brandId) conditions.push(sql`${data.brandId} = ANY(${articleDiscoveries.brandIds})`);
   if (data.campaignId) conditions.push(eq(articleDiscoveries.campaignId, data.campaignId));
 
   // Dynasty slugs (resolved list) take priority over exact slugs
@@ -62,7 +62,7 @@ function buildConditions(data: BuildConditionsData) {
   return conditions;
 }
 
-async function queryStats(conditions: ReturnType<typeof buildConditions>): Promise<StatsResult> {
+async function queryStats(conditions: SQL[]): Promise<StatsResult> {
   const whereClause = conditions.length === 0 ? undefined : conditions.length === 1 ? conditions[0] : and(...conditions);
 
   const [row] = await db
@@ -84,8 +84,8 @@ async function queryStats(conditions: ReturnType<typeof buildConditions>): Promi
 }
 
 async function queryGroupedStats(
-  conditions: ReturnType<typeof buildConditions>,
-  groupByColumn: "workflowSlug" | "featureSlug" | "brandId" | "campaignId",
+  conditions: SQL[],
+  groupByColumn: "workflowSlug" | "featureSlug" | "campaignId",
 ): Promise<{ key: string; stats: StatsResult }[]> {
   const col = articleDiscoveries[groupByColumn];
   const whereClause = conditions.length === 0 ? undefined : conditions.length === 1 ? conditions[0] : and(...conditions);
@@ -109,6 +109,40 @@ async function queryGroupedStats(
       uniqueArticles: Number(r.uniqueArticles),
       uniqueOutlets: Number(r.uniqueOutlets),
       uniqueJournalists: Number(r.uniqueJournalists),
+    },
+  }));
+}
+
+async function queryGroupedStatsByBrand(
+  conditions: SQL[],
+): Promise<{ key: string; stats: StatsResult }[]> {
+  const whereClause = conditions.length === 0 ? sql`TRUE` : conditions.length === 1 ? conditions[0] : and(...conditions);
+
+  const rows = await db.execute<{
+    brand_id: string;
+    total_discoveries: string;
+    unique_articles: string;
+    unique_outlets: string;
+    unique_journalists: string;
+  }>(sql`
+    SELECT
+      unnest(brand_ids) AS brand_id,
+      count(*) AS total_discoveries,
+      count(DISTINCT article_id) AS unique_articles,
+      count(DISTINCT outlet_id) AS unique_outlets,
+      count(DISTINCT journalist_id) AS unique_journalists
+    FROM article_discoveries
+    WHERE ${whereClause}
+    GROUP BY brand_id
+  `);
+
+  return rows.map((r) => ({
+    key: r.brand_id ?? "unknown",
+    stats: {
+      totalDiscoveries: Number(r.total_discoveries),
+      uniqueArticles: Number(r.unique_articles),
+      uniqueOutlets: Number(r.unique_outlets),
+      uniqueJournalists: Number(r.unique_journalists),
     },
   }));
 }
@@ -202,11 +236,16 @@ async function handleStatsRequest(
     return { status: 200, body: { groups } };
   }
 
+  // GroupBy brandId uses unnest since brand_ids is an array
+  if (groupBy === "brandId") {
+    const groups = await queryGroupedStatsByBrand(conditions);
+    return { status: 200, body: { groups } };
+  }
+
   // GroupBy exact slug or other dimension
-  const columnMap: Record<string, "workflowSlug" | "featureSlug" | "brandId" | "campaignId"> = {
+  const columnMap: Record<string, "workflowSlug" | "featureSlug" | "campaignId"> = {
     workflowSlug: "workflowSlug",
     featureSlug: "featureSlug",
-    brandId: "brandId",
     campaignId: "campaignId",
   };
   const col = columnMap[groupBy];

@@ -37,12 +37,15 @@ export function requireIdentity(req: Request, res: Response, next: NextFunction)
     return;
   }
 
-  const brandId = req.headers["x-brand-id"] as string | undefined;
-  if (brandId !== undefined && !UUID_REGEX.test(brandId)) {
-    res.status(400).json({
-      error: "x-brand-id must be a valid UUID when provided",
-    });
-    return;
+  const rawBrandId = req.headers["x-brand-id"] as string | undefined;
+  if (rawBrandId !== undefined) {
+    const brandIds = rawBrandId.split(",").map((s) => s.trim()).filter(Boolean);
+    if (brandIds.length === 0 || !brandIds.every((id) => UUID_REGEX.test(id))) {
+      res.status(400).json({
+        error: "x-brand-id must contain valid comma-separated UUIDs when provided",
+      });
+      return;
+    }
   }
 
   const workflowSlug = req.headers["x-workflow-slug"] as string | undefined;
