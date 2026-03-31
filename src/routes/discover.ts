@@ -162,7 +162,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
       return;
     }
 
-    const { journalistFirstName, journalistLastName, journalistId, outletDomain, maxResults } = parsed.data;
+    const { journalistFirstName, journalistLastName, outletDomain, maxResults } = parsed.data;
 
     // Step 1: Search Google News for this journalist's articles scoped to outlet
     const query = `"${journalistFirstName} ${journalistLastName}" site:${outletDomain}`;
@@ -219,7 +219,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
       })
       .returning();
 
-    // Step 4: Create discovery records scoped to this campaign + journalist
+    // Step 4: Create discovery records scoped to this campaign
     const discoveryValues = upserted.map((a) => ({
       articleId: a.id,
       orgId: identityHeaders.orgId,
@@ -227,7 +227,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
       featureSlug: identityHeaders.featureSlug ?? "unknown",
       campaignId,
       outletId: null as string | null,
-      journalistId,
+      journalistId: null as string | null,
       topicId: null as string | null,
     }));
 

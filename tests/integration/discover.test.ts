@@ -4,7 +4,6 @@ import { createTestApp, getAuthHeaders, TEST_ORG_ID, TEST_USER_ID, TEST_RUN_ID, 
 import { cleanTestData, closeDb, insertTestArticle } from "../helpers/test-db.js";
 import { db } from "../../src/db/index.js";
 import { articles, articleDiscoveries } from "../../src/db/schema.js";
-import { eq } from "drizzle-orm";
 
 // Mock external services
 vi.mock("../../src/services/google.js", async (importOriginal) => {
@@ -221,8 +220,6 @@ describe("POST /v1/discover/outlet-articles", () => {
 });
 
 describe("POST /v1/discover/journalist-publications", () => {
-  const journalistId = "d0000000-0000-4000-8000-000000000001";
-
   it("discovers publications by a journalist, stores and creates discoveries", async () => {
     mockSearchNews.mockResolvedValue([
       { title: "Tech Trends 2025", link: "https://wired.com/tech-trends", snippet: "...", source: "Wired", date: "2025-03-15", domain: "wired.com" },
@@ -250,21 +247,18 @@ describe("POST /v1/discover/journalist-publications", () => {
       .send({
         journalistFirstName: "Sarah",
         journalistLastName: "Perez",
-        journalistId,
         outletDomain: "wired.com",
       });
 
     expect(res.status).toBe(200);
     expect(res.body.articles).toHaveLength(2);
 
-    // Verify discovery records were created with journalist link
-    const discoveries = await db
-      .select()
-      .from(articleDiscoveries)
-      .where(eq(articleDiscoveries.journalistId, journalistId));
+    // Verify discovery records were created
+    const discoveries = await db.select().from(articleDiscoveries);
     expect(discoveries).toHaveLength(2);
     expect(discoveries[0].brandId).toBe(TEST_BRAND_ID);
     expect(discoveries[0].campaignId).toBe(TEST_CAMPAIGN_ID);
+    expect(discoveries[0].journalistId).toBeNull();
 
     // Verify Google was called with quoted name + site: filter
     expect(mockSearchNews).toHaveBeenCalledWith(
@@ -283,7 +277,6 @@ describe("POST /v1/discover/journalist-publications", () => {
       .send({
         journalistFirstName: "Unknown",
         journalistLastName: "Person",
-        journalistId,
         outletDomain: "example.com",
       });
 
@@ -307,7 +300,7 @@ describe("POST /v1/discover/journalist-publications", () => {
     const res = await request(app)
       .post("/v1/discover/journalist-publications")
       .set(headers)
-      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId, outletDomain: "techcrunch.com" });
+      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", outletDomain: "techcrunch.com" });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toContain("x-brand-id");
@@ -320,7 +313,7 @@ describe("POST /v1/discover/journalist-publications", () => {
     const res = await request(app)
       .post("/v1/discover/journalist-publications")
       .set(headers)
-      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId, outletDomain: "techcrunch.com" });
+      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", outletDomain: "techcrunch.com" });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toContain("x-campaign-id");
@@ -335,7 +328,6 @@ describe("POST /v1/discover/journalist-publications", () => {
       .send({
         journalistFirstName: "Sarah",
         journalistLastName: "Perez",
-        journalistId,
         outletDomain: "techcrunch.com",
       });
 
@@ -353,7 +345,6 @@ describe("POST /v1/discover/journalist-publications", () => {
       .send({
         journalistFirstName: "Sarah",
         journalistLastName: "Perez",
-        journalistId,
       });
 
     expect(res.status).toBe(400);
@@ -368,7 +359,6 @@ describe("POST /v1/discover/journalist-publications", () => {
       .send({
         journalistFirstName: "Sarah",
         journalistLastName: "Perez",
-        journalistId,
         outletDomain: "techcrunch.com",
         maxResults: 5,
       });
@@ -382,7 +372,7 @@ describe("POST /v1/discover/journalist-publications", () => {
     await request(app)
       .post("/v1/discover/journalist-publications")
       .set(getAuthHeaders())
-      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", journalistId, outletDomain: "techcrunch.com" });
+      .send({ journalistFirstName: "Sarah", journalistLastName: "Perez", outletDomain: "techcrunch.com" });
 
     expect(mockSearchNews).toHaveBeenCalledWith(
       '"Sarah Perez" site:techcrunch.com',
@@ -416,7 +406,6 @@ describe("POST /v1/discover/journalist-publications", () => {
     const body = {
       journalistFirstName: "Sarah",
       journalistLastName: "Perez",
-      journalistId,
       outletDomain: "example.com",
     };
 
@@ -424,10 +413,7 @@ describe("POST /v1/discover/journalist-publications", () => {
     await request(app).post("/v1/discover/journalist-publications").set(getAuthHeaders()).send(body);
     await request(app).post("/v1/discover/journalist-publications").set(getAuthHeaders()).send(body);
 
-    const discoveries = await db
-      .select()
-      .from(articleDiscoveries)
-      .where(eq(articleDiscoveries.journalistId, journalistId));
+    const discoveries = await db.select().from(articleDiscoveries);
     expect(discoveries.length).toBeGreaterThanOrEqual(1);
   });
 });

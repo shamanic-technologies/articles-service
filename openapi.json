@@ -650,11 +650,6 @@
             "description": "Journalist last name",
             "example": "Perez"
           },
-          "journalistId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Journalist UUID for linking discoveries back to the journalist record"
-          },
           "outletDomain": {
             "type": "string",
             "minLength": 1,
@@ -672,7 +667,6 @@
         "required": [
           "journalistFirstName",
           "journalistLastName",
-          "journalistId",
           "outletDomain"
         ]
       },
