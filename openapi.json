@@ -655,6 +655,12 @@
             "format": "uuid",
             "description": "Journalist UUID for linking discoveries back to the journalist record"
           },
+          "outletDomain": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Outlet domain to scope the Google News search via site: filter (e.g. 'techcrunch.com')",
+            "example": "techcrunch.com"
+          },
           "maxResults": {
             "type": "integer",
             "minimum": 1,
