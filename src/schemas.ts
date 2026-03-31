@@ -157,7 +157,6 @@ export const DiscoverJournalistPublicationsBodySchema = z
   .object({
     journalistFirstName: z.string().min(1).openapi({ description: "Journalist first name", example: "Sarah" }),
     journalistLastName: z.string().min(1).openapi({ description: "Journalist last name", example: "Perez" }),
-    journalistId: z.string().uuid().openapi({ description: "Journalist UUID for linking discoveries back to the journalist record" }),
     outletDomain: z.string().min(1).openapi({ description: "Outlet domain to scope the Google News search via site: filter (e.g. 'techcrunch.com')", example: "techcrunch.com" }),
     maxResults: z.number().int().min(1).max(20).optional().default(10).openapi({ description: "Max publications to find (default 10, max 20)" }),
   })
