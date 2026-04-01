@@ -53,21 +53,6 @@ interface ChatCompleteResponse {
   model: string;
 }
 
-function parseJsonFromContent(content: string): Record<string, unknown> | null {
-  // Strip markdown code fences (```json ... ``` or ``` ... ```)
-  const fenceMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)```/);
-  const raw = fenceMatch ? fenceMatch[1].trim() : content.trim();
-  try {
-    const result = JSON.parse(raw);
-    if (typeof result === "object" && result !== null && !Array.isArray(result)) {
-      return result as Record<string, unknown>;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
 export async function extractMetadataFromMarkdown(
   markdown: string,
   headers: IdentityHeaders,
@@ -112,8 +97,7 @@ export async function extractMetadataFromMarkdown(
   const data = (await res.json()) as ChatCompleteResponse;
 
   // Use the pre-parsed `json` field from chat-service (already fence-stripped and parsed)
-  // Fall back to parsing raw content if json field is missing (chat-service sometimes omits it)
-  const parsed = data.json ?? parseJsonFromContent(data.content);
+  const parsed = data.json;
   if (!parsed) {
     console.error("[Articles Service] Chat-service returned no parsed JSON, raw content:", data.content);
     return { isArticle: false, authors: [], publishedAt: null };
