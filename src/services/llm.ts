@@ -84,7 +84,7 @@ export async function extractMetadataFromMarkdown(
       systemPrompt: SYSTEM_PROMPT,
       responseFormat: "json",
       provider: "google",
-      model: "flash",
+      model: "flash-lite",
       maxTokens: 512,
       temperature: 0,
     }),

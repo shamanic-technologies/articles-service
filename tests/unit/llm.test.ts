@@ -53,7 +53,7 @@ describe("extractMetadataFromMarkdown", () => {
     const body = JSON.parse(fetchMock.mock.calls[0][1]?.body as string);
     expect(body.responseFormat).toBe("json");
     expect(body.provider).toBe("google");
-    expect(body.model).toBe("flash");
+    expect(body.model).toBe("flash-lite");
     expect(body.systemPrompt).toBeDefined();
     expect(body.maxTokens).toBe(512);
   });
