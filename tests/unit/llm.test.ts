@@ -91,7 +91,45 @@ describe("extractMetadataFromMarkdown", () => {
     expect(result.publishedAt).toBeNull();
   });
 
-  it("returns empty result when chat-service returns no json field", async () => {
+  it("falls back to parsing JSON from code-fenced content when json field is missing", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        content: '```json\n{\n  "isArticle": false,\n  "authors": [],\n  "publishedAt": null\n}\n```\nThis is not a press article.',
+        tokensInput: 100,
+        tokensOutput: 50,
+        model: "claude-haiku-4-5",
+      }),
+    }));
+
+    const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
+    const result = await extractMetadataFromMarkdown("Login page content", TEST_HEADERS);
+
+    expect(result.isArticle).toBe(false);
+    expect(result.authors).toEqual([]);
+    expect(result.publishedAt).toBeNull();
+  });
+
+  it("falls back to parsing raw JSON content without code fences when json field is missing", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        content: '{"isArticle": true, "authors": [{"type": "person", "firstName": "Jane", "lastName": "Doe"}], "publishedAt": "2025-06-01T00:00:00Z"}',
+        tokensInput: 100,
+        tokensOutput: 50,
+        model: "claude-haiku-4-5",
+      }),
+    }));
+
+    const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
+    const result = await extractMetadataFromMarkdown("# Article by Jane Doe", TEST_HEADERS);
+
+    expect(result.isArticle).toBe(true);
+    expect(result.authors).toEqual([{ type: "person", firstName: "Jane", lastName: "Doe" }]);
+    expect(result.publishedAt).toBe("2025-06-01T00:00:00Z");
+  });
+
+  it("returns empty result when content is not parseable JSON and json field is missing", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({
