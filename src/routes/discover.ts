@@ -87,6 +87,7 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
         ogDescription: null,
         articlePublished: ext.publishedAt ?? null,
         author: ext.authors.length > 0 ? serializeAuthors(ext.authors) : null,
+        markdownLength: ext.markdownLength,
         extractedAt: new Date(),
       };
     });
@@ -102,6 +103,7 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
           ogDescription: sql`EXCLUDED.og_description`,
           articlePublished: sql`EXCLUDED.article_published`,
           author: sql`EXCLUDED.author`,
+          markdownLength: sql`EXCLUDED.markdown_length`,
           extractedAt: sql`EXCLUDED.extracted_at`,
           updatedAt: new Date(),
         },
@@ -206,6 +208,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
         ogDescription: null,
         articlePublished: ext.publishedAt ?? null,
         author: ext.authors.length > 0 ? serializeAuthors(ext.authors) : null,
+        markdownLength: ext.markdownLength,
         extractedAt: new Date(),
       };
     });
@@ -221,6 +224,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
           ogDescription: sql`EXCLUDED.og_description`,
           articlePublished: sql`EXCLUDED.article_published`,
           author: sql`EXCLUDED.author`,
+          markdownLength: sql`EXCLUDED.markdown_length`,
           extractedAt: sql`EXCLUDED.extracted_at`,
           updatedAt: new Date(),
         },

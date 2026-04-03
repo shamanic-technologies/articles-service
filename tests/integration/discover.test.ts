@@ -47,12 +47,14 @@ describe("POST /v1/discover/outlet-articles", () => {
         success: true,
         authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-20T00:00:00Z",
+        markdownLength: 5200,
       },
       {
         url: "https://techcrunch.com/2025/article-2",
         success: true,
         authors: [{ type: "person", firstName: "John", lastName: "Doe" }, { type: "person", firstName: "Jane", lastName: "Smith" }],
         publishedAt: "2025-03-18T00:00:00Z",
+        markdownLength: 3200,
       },
     ]);
 
@@ -77,6 +79,11 @@ describe("POST /v1/discover/outlet-articles", () => {
 
     // Verify extractedAt was set
     expect(stored[0].extractedAt).toBeTruthy();
+
+    // Verify markdownLength was stored
+    const storedByUrl = new Map(stored.map((a) => [a.articleUrl, a]));
+    expect(storedByUrl.get("https://techcrunch.com/2025/article-1")!.markdownLength).toBe(5200);
+    expect(storedByUrl.get("https://techcrunch.com/2025/article-2")!.markdownLength).toBe(3200);
 
     // Verify discovery records were created
     const discoveries = await db.select().from(articleDiscoveries);
@@ -119,6 +126,7 @@ describe("POST /v1/discover/outlet-articles", () => {
         success: true,
         authors: [{ type: "person", firstName: "Alice", lastName: "Johnson" }],
         publishedAt: "2025-03-20T00:00:00Z",
+        markdownLength: 2800,
       },
       {
         url: "https://example.com/bad",
@@ -232,12 +240,14 @@ describe("POST /v1/discover/journalist-publications", () => {
         success: true,
         authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-15T00:00:00Z",
+        markdownLength: 7500,
       },
       {
         url: "https://nytimes.com/ai-revolution",
         success: true,
         authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-10T00:00:00Z",
+        markdownLength: 12000,
       },
     ]);
 
@@ -400,6 +410,7 @@ describe("POST /v1/discover/journalist-publications", () => {
         success: true,
         authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-20T00:00:00Z",
+        markdownLength: 4100,
       },
     ]);
 

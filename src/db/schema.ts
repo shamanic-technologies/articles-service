@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, integer, uniqueIndex, index } from "drizzle-orm/pg-core";
 
 export const articles = pgTable(
   "articles",
@@ -18,6 +18,7 @@ export const articles = pgTable(
     articleAuthor: text("article_author"),
     twitterDescription: text("twitter_description"),
     articleModified: text("article_modified"),
+    markdownLength: integer("markdown_length"),
     extractedAt: timestamp("extracted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

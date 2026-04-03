@@ -47,6 +47,7 @@ export const ArticleSchema = z
     articleAuthor: z.string().nullable().openapi({ description: "Raw author string from article:author meta tag" }),
     twitterDescription: z.string().nullable().openapi({ description: "Twitter/X card description meta tag" }),
     articleModified: z.string().nullable().openapi({ description: "Last modified date from article metadata" }),
+    markdownLength: z.number().int().nullable().openapi({ description: "Character count of the raw markdown fetched from the scraping service (before LLM truncation)", example: 12500 }),
     createdAt: z.string().datetime().openapi({ description: "When this article record was first created" }),
     updatedAt: z.string().datetime().openapi({ description: "When this article record was last updated" }),
   })
