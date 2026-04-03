@@ -1,1 +1,1 @@
-ALTER TABLE "articles" ADD COLUMN "markdown_length" integer;
+ALTER TABLE "articles" ADD COLUMN IF NOT EXISTS "markdown_length" integer;
