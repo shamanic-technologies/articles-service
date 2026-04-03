@@ -119,6 +119,12 @@
             "nullable": true,
             "description": "Last modified date from article metadata"
           },
+          "markdownLength": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Character count of the raw markdown fetched from the scraping service (before LLM truncation)",
+            "example": 12500
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -146,6 +152,7 @@
           "articleAuthor",
           "twitterDescription",
           "articleModified",
+          "markdownLength",
           "createdAt",
           "updatedAt"
         ]

@@ -9,6 +9,7 @@ export interface ExtractResultSuccess {
   success: true;
   authors: ExtractedAuthor[];
   publishedAt: string | null;
+  markdownLength: number;
 }
 
 interface ExtractResultError {
@@ -111,6 +112,7 @@ export async function extractArticles(
       articleUrl: articles.articleUrl,
       author: articles.author,
       articlePublished: articles.articlePublished,
+      markdownLength: articles.markdownLength,
     })
     .from(articles)
     .where(
@@ -134,6 +136,7 @@ export async function extractArticles(
       success: true,
       authors: cached.author ? parseStoredAuthors(cached.author) : [],
       publishedAt: cached.articlePublished ?? null,
+      markdownLength: cached.markdownLength ?? 0,
     });
   }
 
@@ -180,6 +183,7 @@ export async function extractArticles(
           success: true,
           authors: metadata.authors,
           publishedAt: metadata.publishedAt,
+          markdownLength: markdown.length,
         });
       } catch (err) {
         console.error(`[Articles Service] LLM extraction failed for ${url}:`, err);
