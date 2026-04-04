@@ -127,10 +127,8 @@ router.get("/v1/discoveries", async (req, res) => {
       outletId,
       journalistId,
       topicId,
-      featureSlug,
       featureSlugs: featureSlugsParam,
       featureDynastySlug,
-      workflowSlug,
       workflowSlugs: workflowSlugsParam,
       workflowDynastySlug,
     } = parsed.data;
@@ -149,7 +147,7 @@ router.get("/v1/discoveries", async (req, res) => {
     if (journalistId) conditions.push(eq(articleDiscoveries.journalistId, journalistId));
     if (topicId) conditions.push(eq(articleDiscoveries.topicId, topicId));
 
-    // Feature filtering: dynastySlug > featureSlugs > featureSlug
+    // Feature filtering: dynastySlug > featureSlugs
     let resolvedFeatureSlugs: string[] | undefined;
     if (featureDynastySlug) {
       resolvedFeatureSlugs = await resolveFeatureDynastySlugs(featureDynastySlug, identityHeaders);
@@ -163,11 +161,9 @@ router.get("/v1/discoveries", async (req, res) => {
 
     if (resolvedFeatureSlugs && resolvedFeatureSlugs.length > 0) {
       conditions.push(inArray(articleDiscoveries.featureSlug, resolvedFeatureSlugs));
-    } else if (featureSlug) {
-      conditions.push(eq(articleDiscoveries.featureSlug, featureSlug));
     }
 
-    // Workflow filtering: dynastySlug > workflowSlugs > workflowSlug
+    // Workflow filtering: dynastySlug > workflowSlugs
     let resolvedWorkflowSlugs: string[] | undefined;
     if (workflowDynastySlug) {
       resolvedWorkflowSlugs = await resolveWorkflowDynastySlugs(workflowDynastySlug, identityHeaders);
@@ -181,8 +177,6 @@ router.get("/v1/discoveries", async (req, res) => {
 
     if (resolvedWorkflowSlugs && resolvedWorkflowSlugs.length > 0) {
       conditions.push(inArray(articleDiscoveries.workflowSlug, resolvedWorkflowSlugs));
-    } else if (workflowSlug) {
-      conditions.push(eq(articleDiscoveries.workflowSlug, workflowSlug));
     }
 
     const whereClause = conditions.length === 1 ? conditions[0] : and(...conditions);

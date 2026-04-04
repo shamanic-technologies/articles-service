@@ -242,7 +242,7 @@ describe("GET /v1/discoveries", () => {
     expect(res.body.discoveries).toHaveLength(0);
   });
 
-  it("filters by featureSlug", async () => {
+  it("filters by featureSlugs with a single value", async () => {
     const article1 = await insertTestArticle({ articleUrl: "https://example.com/feat1" });
     const article2 = await insertTestArticle({ articleUrl: "https://example.com/feat2" });
 
@@ -262,7 +262,7 @@ describe("GET /v1/discoveries", () => {
     });
 
     const res = await request(app)
-      .get("/v1/discoveries?featureSlug=press-outreach-v3")
+      .get("/v1/discoveries?featureSlugs=press-outreach-v3")
       .set(getIdentityHeaders());
 
     expect(res.status).toBe(200);
@@ -270,7 +270,7 @@ describe("GET /v1/discoveries", () => {
     expect(res.body.discoveries[0].discovery.featureSlug).toBe("press-outreach-v3");
   });
 
-  it("filters by featureSlugs (comma-separated)", async () => {
+  it("filters by featureSlugs with multiple comma-separated values", async () => {
     const article1 = await insertTestArticle({ articleUrl: "https://example.com/fs1" });
     const article2 = await insertTestArticle({ articleUrl: "https://example.com/fs2" });
     const article3 = await insertTestArticle({ articleUrl: "https://example.com/fs3" });
@@ -308,7 +308,7 @@ describe("GET /v1/discoveries", () => {
     expect(slugs).toContain("press-outreach-v4");
   });
 
-  it("filters by workflowSlug", async () => {
+  it("filters by workflowSlugs with a single value", async () => {
     const article1 = await insertTestArticle({ articleUrl: "https://example.com/wf1" });
     const article2 = await insertTestArticle({ articleUrl: "https://example.com/wf2" });
 
@@ -330,7 +330,7 @@ describe("GET /v1/discoveries", () => {
     });
 
     const res = await request(app)
-      .get("/v1/discoveries?workflowSlug=outreach-pipeline-v2")
+      .get("/v1/discoveries?workflowSlugs=outreach-pipeline-v2")
       .set(getIdentityHeaders());
 
     expect(res.status).toBe(200);
