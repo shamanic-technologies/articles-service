@@ -1800,59 +1800,152 @@
       "get": {
         "operationId": "listDiscoveries",
         "summary": "List article discoveries with filters",
+        "description": "List discoveries with optional filters. Supports filtering by featureDynastySlug (resolves to all versioned slugs via features-service), featureSlugs (comma-separated), featureSlug (exact match), and equivalent workflow filters. Dynasty slug takes priority over slugs list, which takes priority over exact slug.",
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "description": "Filter by brand ID"
             },
             "required": false,
+            "description": "Filter by brand ID",
             "name": "brandId",
             "in": "query"
           },
           {
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "description": "Filter by campaign ID"
             },
             "required": false,
+            "description": "Filter by campaign ID",
             "name": "campaignId",
             "in": "query"
           },
           {
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "description": "Filter by outlet ID"
             },
             "required": false,
+            "description": "Filter by outlet ID",
             "name": "outletId",
             "in": "query"
           },
           {
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "description": "Filter by journalist ID"
             },
             "required": false,
+            "description": "Filter by journalist ID",
             "name": "journalistId",
             "in": "query"
           },
           {
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "description": "Filter by topic ID"
             },
             "required": false,
+            "description": "Filter by topic ID",
             "name": "topicId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by exact feature slug"
+            },
+            "required": false,
+            "description": "Filter by exact feature slug",
+            "name": "featureSlug",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "Filter by multiple feature slugs (comma-separated string or repeated query param)"
+            },
+            "required": false,
+            "description": "Filter by multiple feature slugs (comma-separated string or repeated query param)",
+            "name": "featureSlugs",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by feature dynasty slug (resolves to all versioned slugs via features-service)"
+            },
+            "required": false,
+            "description": "Filter by feature dynasty slug (resolves to all versioned slugs via features-service)",
+            "name": "featureDynastySlug",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by exact workflow slug"
+            },
+            "required": false,
+            "description": "Filter by exact workflow slug",
+            "name": "workflowSlug",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "Filter by multiple workflow slugs (comma-separated string or repeated query param)"
+            },
+            "required": false,
+            "description": "Filter by multiple workflow slugs (comma-separated string or repeated query param)",
+            "name": "workflowSlugs",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by workflow dynasty slug (resolves to all versioned slugs via workflow-service)"
+            },
+            "required": false,
+            "description": "Filter by workflow dynasty slug (resolves to all versioned slugs via workflow-service)",
+            "name": "workflowDynastySlug",
             "in": "query"
           },
           {
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 100
+              "maximum": 100,
+              "description": "Max results to return (default 20, max 100)"
             },
             "required": false,
+            "description": "Max results to return (default 20, max 100)",
             "name": "limit",
             "in": "query"
           },
@@ -1860,9 +1953,11 @@
             "schema": {
               "type": "integer",
               "nullable": true,
-              "minimum": 0
+              "minimum": 0,
+              "description": "Number of results to skip for pagination"
             },
             "required": false,
+            "description": "Number of results to skip for pagination",
             "name": "offset",
             "in": "query"
           },

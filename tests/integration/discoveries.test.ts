@@ -241,4 +241,100 @@ describe("GET /v1/discoveries", () => {
     expect(res.status).toBe(200);
     expect(res.body.discoveries).toHaveLength(0);
   });
+
+  it("filters by featureSlug", async () => {
+    const article1 = await insertTestArticle({ articleUrl: "https://example.com/feat1" });
+    const article2 = await insertTestArticle({ articleUrl: "https://example.com/feat2" });
+
+    await insertTestDiscovery({
+      articleId: article1.id,
+      orgId: TEST_ORG_ID,
+      brandIds: [TEST_BRAND_ID],
+      featureSlug: "press-outreach-v3",
+      campaignId: TEST_CAMPAIGN_ID,
+    });
+    await insertTestDiscovery({
+      articleId: article2.id,
+      orgId: TEST_ORG_ID,
+      brandIds: [TEST_BRAND_ID],
+      featureSlug: "media-monitor-v1",
+      campaignId: TEST_CAMPAIGN_ID,
+    });
+
+    const res = await request(app)
+      .get("/v1/discoveries?featureSlug=press-outreach-v3")
+      .set(getIdentityHeaders());
+
+    expect(res.status).toBe(200);
+    expect(res.body.discoveries).toHaveLength(1);
+    expect(res.body.discoveries[0].discovery.featureSlug).toBe("press-outreach-v3");
+  });
+
+  it("filters by featureSlugs (comma-separated)", async () => {
+    const article1 = await insertTestArticle({ articleUrl: "https://example.com/fs1" });
+    const article2 = await insertTestArticle({ articleUrl: "https://example.com/fs2" });
+    const article3 = await insertTestArticle({ articleUrl: "https://example.com/fs3" });
+
+    await insertTestDiscovery({
+      articleId: article1.id,
+      orgId: TEST_ORG_ID,
+      brandIds: [TEST_BRAND_ID],
+      featureSlug: "press-outreach-v3",
+      campaignId: TEST_CAMPAIGN_ID,
+    });
+    await insertTestDiscovery({
+      articleId: article2.id,
+      orgId: TEST_ORG_ID,
+      brandIds: [TEST_BRAND_ID],
+      featureSlug: "press-outreach-v4",
+      campaignId: TEST_CAMPAIGN_ID,
+    });
+    await insertTestDiscovery({
+      articleId: article3.id,
+      orgId: TEST_ORG_ID,
+      brandIds: [TEST_BRAND_ID],
+      featureSlug: "media-monitor-v1",
+      campaignId: TEST_CAMPAIGN_ID,
+    });
+
+    const res = await request(app)
+      .get("/v1/discoveries?featureSlugs=press-outreach-v3,press-outreach-v4")
+      .set(getIdentityHeaders());
+
+    expect(res.status).toBe(200);
+    expect(res.body.discoveries).toHaveLength(2);
+    const slugs = res.body.discoveries.map((d: { discovery: { featureSlug: string } }) => d.discovery.featureSlug);
+    expect(slugs).toContain("press-outreach-v3");
+    expect(slugs).toContain("press-outreach-v4");
+  });
+
+  it("filters by workflowSlug", async () => {
+    const article1 = await insertTestArticle({ articleUrl: "https://example.com/wf1" });
+    const article2 = await insertTestArticle({ articleUrl: "https://example.com/wf2" });
+
+    await insertTestDiscovery({
+      articleId: article1.id,
+      orgId: TEST_ORG_ID,
+      brandIds: [TEST_BRAND_ID],
+      featureSlug: TEST_FEATURE_SLUG,
+      workflowSlug: "outreach-pipeline-v2",
+      campaignId: TEST_CAMPAIGN_ID,
+    });
+    await insertTestDiscovery({
+      articleId: article2.id,
+      orgId: TEST_ORG_ID,
+      brandIds: [TEST_BRAND_ID],
+      featureSlug: TEST_FEATURE_SLUG,
+      workflowSlug: "other-pipeline-v1",
+      campaignId: TEST_CAMPAIGN_ID,
+    });
+
+    const res = await request(app)
+      .get("/v1/discoveries?workflowSlug=outreach-pipeline-v2")
+      .set(getIdentityHeaders());
+
+    expect(res.status).toBe(200);
+    expect(res.body.discoveries).toHaveLength(1);
+    expect(res.body.discoveries[0].discovery.workflowSlug).toBe("outreach-pipeline-v2");
+  });
 });
