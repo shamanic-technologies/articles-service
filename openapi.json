@@ -758,6 +758,57 @@
           "featureDynastySlug"
         ],
         "description": "Group results by dimension"
+      },
+      "TransferBrandResponse": {
+        "type": "object",
+        "properties": {
+          "updatedTables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tableName": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "tableName",
+                "count"
+              ]
+            }
+          }
+        },
+        "required": [
+          "updatedTables"
+        ]
+      },
+      "TransferBrandBody": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Brand UUID to transfer"
+          },
+          "sourceOrgId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Current owner org UUID"
+          },
+          "targetOrgId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "New owner org UUID"
+          }
+        },
+        "required": [
+          "brandId",
+          "sourceOrgId",
+          "targetOrgId"
+        ]
       }
     },
     "parameters": {}
@@ -3187,6 +3238,54 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/transfer-brand": {
+      "post": {
+        "operationId": "transferBrand",
+        "summary": "Re-assign solo-brand rows from one org to another",
+        "description": "For every table that stores brand references alongside org_id, updates org_id from sourceOrgId to targetOrgId on rows that reference only the given brandId (solo-brand). Skips co-branding rows (multiple brand IDs). Idempotent.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferBrandBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfer complete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferBrandResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
                 }
               }
             }
