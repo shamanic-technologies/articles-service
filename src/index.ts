@@ -37,6 +37,8 @@ app.get("/openapi.json", async (_req, res) => {
 app.use(healthRoutes);
 // Stats routes handle their own auth (public = API key only, private = identity headers)
 app.use(statsRoutes);
+// Internal routes use x-api-key only, no identity headers
+app.use(internalRoutes);
 
 // All routes below require x-org-id, x-user-id, and x-run-id headers
 app.use(requireIdentity);
@@ -44,7 +46,6 @@ app.use(articlesRoutes);
 app.use(topicsRoutes);
 app.use(discoveriesRoutes);
 app.use(discoverRoutes);
-app.use(internalRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });

@@ -262,6 +262,27 @@ export const IdentityHeadersSchema = z.object({
   "x-campaign-id": z.string().uuid().optional().openapi({ description: "Campaign UUID for inter-service propagation" }),
 });
 
+// --- Internal schemas ---
+
+export const TransferBrandBodySchema = z
+  .object({
+    brandId: z.string().uuid().openapi({ description: "Brand UUID to transfer" }),
+    sourceOrgId: z.string().uuid().openapi({ description: "Current owner org UUID" }),
+    targetOrgId: z.string().uuid().openapi({ description: "New owner org UUID" }),
+  })
+  .openapi("TransferBrandBody");
+
+export const TransferBrandResponseSchema = z
+  .object({
+    updatedTables: z.array(
+      z.object({
+        tableName: z.string(),
+        count: z.number().int(),
+      }),
+    ),
+  })
+  .openapi("TransferBrandResponse");
+
 // --- Register paths ---
 
 registry.registerPath({
@@ -555,6 +576,22 @@ registry.registerPath({
       content: { "application/json": { schema: z.union([FlatStatsResponseSchema, GroupedStatsResponseSchema]) } },
     },
     400: { description: "Invalid request", content: { "application/json": { schema: ErrorResponseSchema } } },
+    500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/internal/transfer-brand",
+  operationId: "transferBrand",
+  summary: "Re-assign solo-brand rows from one org to another",
+  description: "For every table that stores brand references alongside org_id, updates org_id from sourceOrgId to targetOrgId on rows that reference only the given brandId (solo-brand). Skips co-branding rows (multiple brand IDs). Idempotent.",
+  request: {
+    body: { content: { "application/json": { schema: TransferBrandBodySchema } } },
+  },
+  responses: {
+    200: { description: "Transfer complete", content: { "application/json": { schema: TransferBrandResponseSchema } } },
+    400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
     500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
   },
 });

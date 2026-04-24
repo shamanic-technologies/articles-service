@@ -37,12 +37,12 @@ export function createTestApp() {
   });
   app.use(healthRoutes);
   app.use(statsRoutes);
+  app.use(internalRoutes);
   app.use(requireIdentity);
   app.use(articlesRoutes);
   app.use(topicsRoutes);
   app.use(discoveriesRoutes);
   app.use(discoverRoutes);
-  app.use(internalRoutes);
   app.use((_req: express.Request, res: express.Response) => {
     res.status(404).json({ error: "Not found" });
   });
