@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { inArray } from "drizzle-orm";
-import { db } from "../db/index.js";
+import { db, sql as pgSql } from "../db/index.js";
 import { articles } from "../db/schema.js";
+import { TransferBrandBodySchema } from "../schemas.js";
 
 const router = Router();
 
@@ -28,6 +29,39 @@ router.get("/internal/articles/by-urls", async (req, res) => {
     res.json({ articles: rows });
   } catch (err) {
     console.error("[Articles Service] Error fetching articles by URLs:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /internal/transfer-brand — re-assign solo-brand rows from one org to another
+router.post("/internal/transfer-brand", async (req, res) => {
+  const parsed = TransferBrandBodySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid request body",
+      details: parsed.error.flatten(),
+    });
+    return;
+  }
+
+  const { brandId, sourceOrgId, targetOrgId } = parsed.data;
+
+  try {
+    const result = await pgSql`
+      UPDATE article_discoveries
+      SET org_id = ${targetOrgId}::uuid
+      WHERE org_id = ${sourceOrgId}::uuid
+        AND array_length(brand_ids, 1) = 1
+        AND brand_ids @> ARRAY[${brandId}]::uuid[]
+    `;
+
+    res.json({
+      updatedTables: [
+        { tableName: "article_discoveries", count: result.count },
+      ],
+    });
+  } catch (err) {
+    console.error("[Articles Service] Error transferring brand:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
