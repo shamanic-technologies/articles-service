@@ -266,9 +266,10 @@ export const IdentityHeadersSchema = z.object({
 
 export const TransferBrandBodySchema = z
   .object({
-    brandId: z.string().uuid().openapi({ description: "Brand UUID to transfer" }),
+    sourceBrandId: z.string().uuid().openapi({ description: "Brand UUID to transfer from source org" }),
     sourceOrgId: z.string().uuid().openapi({ description: "Current owner org UUID" }),
     targetOrgId: z.string().uuid().openapi({ description: "New owner org UUID" }),
+    targetBrandId: z.string().uuid().optional().openapi({ description: "Brand UUID in target org to rewrite to (when target org already has the same domain)" }),
   })
   .openapi("TransferBrandBody");
 

@@ -788,10 +788,10 @@
       "TransferBrandBody": {
         "type": "object",
         "properties": {
-          "brandId": {
+          "sourceBrandId": {
             "type": "string",
             "format": "uuid",
-            "description": "Brand UUID to transfer"
+            "description": "Brand UUID to transfer from source org"
           },
           "sourceOrgId": {
             "type": "string",
@@ -802,10 +802,15 @@
             "type": "string",
             "format": "uuid",
             "description": "New owner org UUID"
+          },
+          "targetBrandId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Brand UUID in target org to rewrite to (when target org already has the same domain)"
           }
         },
         "required": [
-          "brandId",
+          "sourceBrandId",
           "sourceOrgId",
           "targetOrgId"
         ]
