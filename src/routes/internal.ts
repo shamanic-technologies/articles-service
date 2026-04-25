@@ -44,20 +44,32 @@ router.post("/internal/transfer-brand", async (req, res) => {
     return;
   }
 
-  const { brandId, sourceOrgId, targetOrgId } = parsed.data;
+  const { sourceBrandId, sourceOrgId, targetOrgId, targetBrandId } = parsed.data;
 
   try {
-    const result = await pgSql`
+    // Step 1: Move solo-brand rows from sourceOrg to targetOrg
+    const step1 = await pgSql`
       UPDATE article_discoveries
       SET org_id = ${targetOrgId}::uuid
       WHERE org_id = ${sourceOrgId}::uuid
         AND array_length(brand_ids, 1) = 1
-        AND brand_ids @> ARRAY[${brandId}]::uuid[]
+        AND brand_ids @> ARRAY[${sourceBrandId}]::uuid[]
     `;
+
+    // Step 2: Rewrite brand references (all rows, including co-brand, no org filter)
+    let step2Count = 0;
+    if (targetBrandId) {
+      const step2 = await pgSql`
+        UPDATE article_discoveries
+        SET brand_ids = array_replace(brand_ids, ${sourceBrandId}::uuid, ${targetBrandId}::uuid)
+        WHERE brand_ids @> ARRAY[${sourceBrandId}]::uuid[]
+      `;
+      step2Count = step2.count;
+    }
 
     res.json({
       updatedTables: [
-        { tableName: "article_discoveries", count: result.count },
+        { tableName: "article_discoveries", count: step1.count + step2Count },
       ],
     });
   } catch (err) {
