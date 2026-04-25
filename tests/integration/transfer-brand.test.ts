@@ -150,7 +150,7 @@ describe("POST /internal/transfer-brand", () => {
     expect(res.body.error).toBe("Invalid request body");
   });
 
-  it("rewrites brand_ids when targetBrandId is provided", async () => {
+  it("rewrites brand_ids when targetBrandId is provided (solo-brand)", async () => {
     const targetBrand = "e0000000-0000-4000-8000-000000000099";
     const article = await insertTestArticle({ articleUrl: "https://example.com/transfer-rewrite-1" });
     await insertTestDiscovery({
@@ -166,14 +166,42 @@ describe("POST /internal/transfer-brand", () => {
       .send({ sourceBrandId: BRAND_A, sourceOrgId: SOURCE_ORG, targetOrgId: TARGET_ORG, targetBrandId: targetBrand });
 
     expect(res.status).toBe(200);
+    // step1 moves org (1 row) + step2 rewrites brand (1 row) = 2
     expect(res.body.updatedTables).toEqual([
-      { tableName: "article_discoveries", count: 1 },
+      { tableName: "article_discoveries", count: 2 },
     ]);
 
     const rows = await db.select().from(articleDiscoveries).where(eq(articleDiscoveries.articleId, article.id));
     expect(rows).toHaveLength(1);
     expect(rows[0].orgId).toBe(TARGET_ORG);
     expect(rows[0].brandIds).toEqual([targetBrand]);
+  });
+
+  it("rewrites brand reference in co-branding rows when targetBrandId is provided", async () => {
+    const targetBrand = "e0000000-0000-4000-8000-000000000099";
+    const article = await insertTestArticle({ articleUrl: "https://example.com/transfer-cobrand-rewrite" });
+    await insertTestDiscovery({
+      articleId: article.id,
+      orgId: SOURCE_ORG,
+      brandIds: [BRAND_A, BRAND_B],
+      featureSlug: "test-feature",
+      campaignId: TEST_CAMPAIGN_ID,
+    });
+
+    const res = await request(app)
+      .post("/internal/transfer-brand")
+      .send({ sourceBrandId: BRAND_A, sourceOrgId: SOURCE_ORG, targetOrgId: TARGET_ORG, targetBrandId: targetBrand });
+
+    expect(res.status).toBe(200);
+    // step1 skips co-brand (0) + step2 rewrites brand ref (1) = 1
+    expect(res.body.updatedTables).toEqual([
+      { tableName: "article_discoveries", count: 1 },
+    ]);
+
+    const rows = await db.select().from(articleDiscoveries).where(eq(articleDiscoveries.articleId, article.id));
+    expect(rows[0].orgId).toBe(SOURCE_ORG); // org unchanged (co-brand skipped in step 1)
+    expect(rows[0].brandIds).toEqual(expect.arrayContaining([targetBrand, BRAND_B]));
+    expect(rows[0].brandIds).not.toContain(BRAND_A);
   });
 
   it("does not rewrite brand_ids when targetBrandId is absent", async () => {
