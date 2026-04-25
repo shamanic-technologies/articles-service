@@ -44,16 +44,25 @@ router.post("/internal/transfer-brand", async (req, res) => {
     return;
   }
 
-  const { brandId, sourceOrgId, targetOrgId } = parsed.data;
+  const { sourceBrandId, sourceOrgId, targetOrgId, targetBrandId } = parsed.data;
 
   try {
-    const result = await pgSql`
-      UPDATE article_discoveries
-      SET org_id = ${targetOrgId}::uuid
-      WHERE org_id = ${sourceOrgId}::uuid
-        AND array_length(brand_ids, 1) = 1
-        AND brand_ids @> ARRAY[${brandId}]::uuid[]
-    `;
+    const result = targetBrandId
+      ? await pgSql`
+          UPDATE article_discoveries
+          SET org_id = ${targetOrgId}::uuid,
+              brand_ids = ARRAY[${targetBrandId}]::uuid[]
+          WHERE org_id = ${sourceOrgId}::uuid
+            AND array_length(brand_ids, 1) = 1
+            AND brand_ids @> ARRAY[${sourceBrandId}]::uuid[]
+        `
+      : await pgSql`
+          UPDATE article_discoveries
+          SET org_id = ${targetOrgId}::uuid
+          WHERE org_id = ${sourceOrgId}::uuid
+            AND array_length(brand_ids, 1) = 1
+            AND brand_ids @> ARRAY[${sourceBrandId}]::uuid[]
+        `;
 
     res.json({
       updatedTables: [
