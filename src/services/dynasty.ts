@@ -38,15 +38,15 @@ export async function resolveWorkflowDynastySlugs(
     return [];
   }
 
-  const url = `${baseUrl}/workflows/dynasty/slugs?dynastySlug=${encodeURIComponent(dynastySlug)}`;
+  const url = `${baseUrl}/workflows/dynasty/slugs?workflowDynastySlug=${encodeURIComponent(dynastySlug)}`;
   const res = await fetch(url, { headers: buildReqHeaders(apiKey, headers) });
   if (!res.ok) {
     console.error(`[Articles Service] Failed to resolve workflow dynasty slug "${dynastySlug}": ${res.status}`);
     return [];
   }
 
-  const body = (await res.json()) as { slugs: string[] };
-  return body.slugs ?? [];
+  const body = (await res.json()) as { workflowSlugs: string[] };
+  return body.workflowSlugs ?? [];
 }
 
 export async function resolveFeatureDynastySlugs(
@@ -86,8 +86,13 @@ export async function fetchAllWorkflowDynasties(
     return [];
   }
 
-  const body = (await res.json()) as { dynasties: DynastyEntry[] };
-  return body.dynasties ?? [];
+  const body = (await res.json()) as {
+    dynasties: { workflowDynastySlug: string; workflowSlugs: string[] }[];
+  };
+  return (body.dynasties ?? []).map((d) => ({
+    dynastySlug: d.workflowDynastySlug,
+    slugs: d.workflowSlugs,
+  }));
 }
 
 export async function fetchAllFeatureDynasties(
