@@ -31,7 +31,7 @@ describe("resolveWorkflowDynastySlugs", () => {
   it("resolves dynasty slug to versioned slugs", async () => {
     fetchSpy.mockResolvedValue({
       ok: true,
-      json: async () => ({ slugs: ["cold-email", "cold-email-v2", "cold-email-v3"] }),
+      json: async () => ({ workflowSlugs: ["cold-email", "cold-email-v2", "cold-email-v3"] }),
     });
 
     const result = await resolveWorkflowDynastySlugs("cold-email", {
@@ -43,7 +43,7 @@ describe("resolveWorkflowDynastySlugs", () => {
     expect(result).toEqual(["cold-email", "cold-email-v2", "cold-email-v3"]);
     expect(fetchSpy).toHaveBeenCalledOnce();
     const [url, opts] = fetchSpy.mock.calls[0];
-    expect(url).toBe("http://workflow:3000/workflows/dynasty/slugs?dynastySlug=cold-email");
+    expect(url).toBe("http://workflow:3000/workflows/dynasty/slugs?workflowDynastySlug=cold-email");
     expect(opts.headers["X-API-Key"]).toBe("wf-key");
     expect(opts.headers["x-org-id"]).toBe("org-1");
   });
@@ -91,16 +91,18 @@ describe("resolveFeatureDynastySlugs", () => {
 
 describe("fetchAllWorkflowDynasties", () => {
   it("fetches all workflow dynasties", async () => {
-    const dynasties = [
-      { dynastySlug: "cold-email", slugs: ["cold-email", "cold-email-v2"] },
+    const remoteDynasties = [
+      { workflowDynastySlug: "cold-email", workflowDynastyName: "Cold Email", workflowSlugs: ["cold-email", "cold-email-v2"] },
     ];
     fetchSpy.mockResolvedValue({
       ok: true,
-      json: async () => ({ dynasties }),
+      json: async () => ({ dynasties: remoteDynasties }),
     });
 
     const result = await fetchAllWorkflowDynasties();
-    expect(result).toEqual(dynasties);
+    expect(result).toEqual([
+      { dynastySlug: "cold-email", slugs: ["cold-email", "cold-email-v2"] },
+    ]);
     const [url] = fetchSpy.mock.calls[0];
     expect(url).toBe("http://workflow:3000/workflows/dynasties");
   });
