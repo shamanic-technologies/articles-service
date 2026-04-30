@@ -9,6 +9,7 @@ import {
   DiscoverOutletArticlesBodySchema,
   DiscoverJournalistPublicationsBodySchema,
 } from "../schemas.js";
+import { traceEvent } from "../lib/trace-event.js";
 
 const router = Router();
 
@@ -49,8 +50,10 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
     const brandIds = parseBrandIds(brandId);
 
     const { outletDomain, maxArticles } = parsed.data;
+    const runId = req.headers["x-run-id"] as string | undefined;
 
     // Step 1: Search Google News for articles from this outlet
+    if (runId) traceEvent(runId, { service: "articles-service", event: "discover-outlet:search-start", detail: `domain=${outletDomain} max=${maxArticles}` }, req.headers);
     const newsResults = await searchNews(
       `site:${outletDomain}`,
       maxArticles,
@@ -58,11 +61,13 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
     );
 
     if (newsResults.length === 0) {
+      if (runId) traceEvent(runId, { service: "articles-service", event: "discover-outlet:no-results", detail: `domain=${outletDomain}` }, req.headers);
       res.json({ articles: [] });
       return;
     }
 
     const urls = newsResults.map((r) => r.link);
+    if (runId) traceEvent(runId, { service: "articles-service", event: "discover-outlet:search-done", detail: `found=${newsResults.length}`, data: { urls } }, req.headers);
 
     // Step 2: Extract authors + publishedAt via scrape+Haiku (with DB cache)
     const allExtractResults: ExtractResultSuccess[] = [];
@@ -72,9 +77,12 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
     }
 
     if (allExtractResults.length === 0) {
+      if (runId) traceEvent(runId, { service: "articles-service", event: "discover-outlet:extract-empty", level: "warn" }, req.headers);
       res.json({ articles: [] });
       return;
     }
+
+    if (runId) traceEvent(runId, { service: "articles-service", event: "discover-outlet:extract-done", detail: `extracted=${allExtractResults.length}/${urls.length}` }, req.headers);
 
     // Step 3: Bulk upsert articles
     const newsByUrl = new Map(newsResults.map((r) => [r.link, r]));
@@ -109,6 +117,8 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
         },
       })
       .returning();
+
+    if (runId) traceEvent(runId, { service: "articles-service", event: "discover-outlet:upsert-done", detail: `upserted=${upserted.length}` }, req.headers);
 
     // Step 4: Create discovery records scoped to this campaign
     const discoveryValues = upserted.map((article) => ({
@@ -173,17 +183,21 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
     const brandIds = parseBrandIds(brandId);
 
     const { journalistFirstName, journalistLastName, outletDomain, maxResults } = parsed.data;
+    const runId = req.headers["x-run-id"] as string | undefined;
 
     // Step 1: Search Google News for this journalist's articles scoped to outlet
     const query = `"${journalistFirstName} ${journalistLastName}" site:${outletDomain}`;
+    if (runId) traceEvent(runId, { service: "articles-service", event: "discover-journalist:search-start", detail: `journalist=${journalistFirstName} ${journalistLastName} domain=${outletDomain}` }, req.headers);
     const newsResults = await searchNews(query, maxResults, identityHeaders);
 
     if (newsResults.length === 0) {
+      if (runId) traceEvent(runId, { service: "articles-service", event: "discover-journalist:no-results", detail: `journalist=${journalistFirstName} ${journalistLastName}` }, req.headers);
       res.json({ articles: [] });
       return;
     }
 
     const urls = newsResults.map((r) => r.link);
+    if (runId) traceEvent(runId, { service: "articles-service", event: "discover-journalist:search-done", detail: `found=${newsResults.length}`, data: { urls } }, req.headers);
 
     // Step 2: Extract authors + publishedAt via scrape+Haiku (with DB cache)
     const allExtractResults: ExtractResultSuccess[] = [];
@@ -193,9 +207,12 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
     }
 
     if (allExtractResults.length === 0) {
+      if (runId) traceEvent(runId, { service: "articles-service", event: "discover-journalist:extract-empty", level: "warn" }, req.headers);
       res.json({ articles: [] });
       return;
     }
+
+    if (runId) traceEvent(runId, { service: "articles-service", event: "discover-journalist:extract-done", detail: `extracted=${allExtractResults.length}/${urls.length}` }, req.headers);
 
     // Step 3: Bulk upsert articles
     const newsByUrl = new Map(newsResults.map((r) => [r.link, r]));
@@ -230,6 +247,8 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
         },
       })
       .returning();
+
+    if (runId) traceEvent(runId, { service: "articles-service", event: "discover-journalist:upsert-done", detail: `upserted=${upserted.length}` }, req.headers);
 
     // Step 4: Create discovery records scoped to this campaign
     const discoveryValues = upserted.map((a) => ({
