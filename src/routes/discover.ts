@@ -69,7 +69,7 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
     const urls = newsResults.map((r) => r.link);
     if (runId) traceEvent(runId, { service: "articles-service", event: "discover-outlet:search-done", detail: `found=${newsResults.length}`, data: { urls } }, req.headers);
 
-    // Step 2: Extract authors + publishedAt via scrape+Haiku (with DB cache)
+    // Step 2: Extract authors + publishedAt via scrape+Gemini Flash-Lite (with DB cache)
     const allExtractResults: ExtractResultSuccess[] = [];
     const results = await extractArticles(urls, identityHeaders);
     for (const r of results) {
@@ -199,7 +199,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
     const urls = newsResults.map((r) => r.link);
     if (runId) traceEvent(runId, { service: "articles-service", event: "discover-journalist:search-done", detail: `found=${newsResults.length}`, data: { urls } }, req.headers);
 
-    // Step 2: Extract authors + publishedAt via scrape+Haiku (with DB cache)
+    // Step 2: Extract authors + publishedAt via scrape+Gemini Flash-Lite (with DB cache)
     const allExtractResults: ExtractResultSuccess[] = [];
     const results = await extractArticles(urls, identityHeaders);
     for (const r of results) {
