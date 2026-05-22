@@ -140,7 +140,7 @@ export async function extractArticles(
     });
   }
 
-  // Step 2: For cache misses, scrape markdown + extract via Haiku
+  // Step 2: For cache misses, scrape markdown + extract via Gemini Flash-Lite
   const urlsToExtract = urls.filter((u) => !cachedByUrl.has(u));
 
   if (urlsToExtract.length === 0) {
@@ -149,7 +149,7 @@ export async function extractArticles(
   }
 
   console.log(
-    `[Articles Service] Cache hit: ${cachedArticles.length}/${urls.length}, extracting ${urlsToExtract.length} new URLs via scrape+Haiku`,
+    `[Articles Service] Cache hit: ${cachedArticles.length}/${urls.length}, extracting ${urlsToExtract.length} new URLs via scrape+Gemini Flash-Lite`,
   );
 
   // Scrape all URLs in parallel
@@ -160,7 +160,7 @@ export async function extractArticles(
     }),
   );
 
-  // Extract metadata via Haiku for each scraped page
+  // Extract metadata via Gemini Flash-Lite for each scraped page
   await Promise.allSettled(
     scrapeResults.map(async (scrapeResult) => {
       if (scrapeResult.status === "rejected") {
