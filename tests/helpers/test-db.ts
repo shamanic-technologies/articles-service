@@ -1,8 +1,9 @@
 import { db, sql } from "../../src/db/index.js";
-import { articles, topics, articleDiscoveries } from "../../src/db/schema.js";
+import { articles, topics, articleDiscoveries, articleMentions } from "../../src/db/schema.js";
 
 export async function cleanTestData() {
   // Delete in order respecting foreign keys
+  await db.delete(articleMentions);
   await db.delete(articleDiscoveries);
   await db.delete(articles);
   await db.delete(topics);
@@ -62,6 +63,46 @@ export async function insertTestDiscovery(data: {
     })
     .returning();
   return discovery;
+}
+
+export async function insertTestMention(data: {
+  articleId: string;
+  orgId: string;
+  brandIds: string[];
+  outletId: string;
+  journalistId: string;
+  campaignId: string;
+  pitchId?: string | null;
+  hasMention?: boolean;
+  hasQuote?: boolean;
+  hasLink?: boolean;
+  linkDofollow?: boolean | null;
+  placementType?: string;
+  isPaid?: boolean;
+  costUsdCents?: number | null;
+  createdBy?: string | null;
+}) {
+  const [mention] = await db
+    .insert(articleMentions)
+    .values({
+      articleId: data.articleId,
+      orgId: data.orgId,
+      brandIds: data.brandIds,
+      outletId: data.outletId,
+      journalistId: data.journalistId,
+      campaignId: data.campaignId,
+      pitchId: data.pitchId ?? null,
+      hasMention: data.hasMention ?? true,
+      hasQuote: data.hasQuote ?? false,
+      hasLink: data.hasLink ?? false,
+      linkDofollow: data.linkDofollow ?? null,
+      placementType: data.placementType ?? "organic",
+      isPaid: data.isPaid ?? false,
+      costUsdCents: data.costUsdCents ?? null,
+      createdBy: data.createdBy ?? null,
+    })
+    .returning();
+  return mention;
 }
 
 export async function closeDb() {
