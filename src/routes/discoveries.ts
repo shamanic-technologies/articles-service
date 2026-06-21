@@ -137,6 +137,7 @@ router.get("/v1/discoveries", async (req, res) => {
       orgId: req.headers["x-org-id"] as string | undefined,
       userId: req.headers["x-user-id"] as string | undefined,
       runId: req.headers["x-run-id"] as string | undefined,
+      audienceId: req.headers["x-audience-id"] as string | undefined,
     };
 
     const conditions: SQL[] = [eq(articleDiscoveries.orgId, orgId)];

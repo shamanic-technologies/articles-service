@@ -19,6 +19,7 @@ export interface IdentityHeaders {
   featureSlug?: string;
   brandId?: string;
   campaignId?: string;
+  audienceId?: string;
 }
 
 export async function searchNews(
@@ -44,6 +45,7 @@ export async function searchNews(
       ...(headers.featureSlug ? { "x-feature-slug": headers.featureSlug } : {}),
       ...(headers.brandId ? { "x-brand-id": headers.brandId } : {}),
       ...(headers.campaignId ? { "x-campaign-id": headers.campaignId } : {}),
+      ...(headers.audienceId ? { "x-audience-id": headers.audienceId } : {}),
     },
     body: JSON.stringify({ query, num }),
   });
