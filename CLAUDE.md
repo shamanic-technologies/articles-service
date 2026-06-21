@@ -20,6 +20,7 @@ Express + TypeScript (strict) + Zod + Drizzle (postgres.js driver) on Neon. Depl
 - `src/index.ts` mounts: health + stats + internal BEFORE `requireIdentity`; articles/topics/discoveries/discover/mentions AFTER it. Anything after `requireIdentity` needs `x-org-id` + `x-user-id` + `x-run-id`.
 - Org-write routes ALSO take per-route `requireApiKey` (`X-API-Key`). `internal/*` use api-key only; `stats` handles its own auth (public variant = api-key only).
 - Identity scoping convention: `org_id` from `x-org-id`, `brand_ids` from comma-split `x-brand-id`, `campaign_id` from `x-campaign-id`, actor from `x-user-id`.
+- Tracking-header forwarding: every outbound call to an internal sibling MUST forward the full tracking block — `x-run-id`, `x-workflow-slug`, `x-feature-slug`, `x-brand-id`, `x-campaign-id`, **`x-audience-id`** (per-audience cost attribution; optional, omit when absent, never throw). `x-audience-id` is passthrough-only here: articles-service declares no runs-service cost itself (LLM goes through chat-service which owns the cost), so it tags no cost row — it just reads inbound + re-forwards. NEVER forward tracking headers to a third-party vendor; articles-service makes zero direct vendor calls (all egress is internal), so the strip is satisfied by construction. New outbound call sites must include `x-audience-id` in their header spread (`services/*.ts`, `lib/trace-event.ts`).
 
 ## Every new endpoint = 3 edits in one PR
 
