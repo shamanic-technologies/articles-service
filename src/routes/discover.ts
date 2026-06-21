@@ -22,6 +22,7 @@ function getIdentityHeaders(req: import("express").Request): IdentityHeaders {
     featureSlug: req.headers["x-feature-slug"] as string | undefined,
     brandId: req.headers["x-brand-id"] as string | undefined,
     campaignId: req.headers["x-campaign-id"] as string | undefined,
+    audienceId: req.headers["x-audience-id"] as string | undefined,
   };
 }
 

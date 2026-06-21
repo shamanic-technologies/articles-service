@@ -187,4 +187,28 @@ describe("extractMetadataFromMarkdown", () => {
     expect(calledHeaders["x-brand-id"]).toBe("brand-123");
     expect(calledHeaders["x-campaign-id"]).toBe("campaign-456");
   });
+
+  it("forwards x-audience-id to chat-service when present", async () => {
+    const json = { isArticle: true, authors: [], publishedAt: null };
+    vi.stubGlobal("fetch", mockFetchResponse(json));
+
+    const headers = { ...TEST_HEADERS, audienceId: "d0000000-0000-4000-8000-000000000001" };
+
+    const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
+    await extractMetadataFromMarkdown("# Article", headers);
+
+    const calledHeaders = vi.mocked(fetch).mock.calls[0][1]?.headers as Record<string, string>;
+    expect(calledHeaders["x-audience-id"]).toBe("d0000000-0000-4000-8000-000000000001");
+  });
+
+  it("omits x-audience-id when absent", async () => {
+    const json = { isArticle: true, authors: [], publishedAt: null };
+    vi.stubGlobal("fetch", mockFetchResponse(json));
+
+    const { extractMetadataFromMarkdown } = await import("../../src/services/llm.js");
+    await extractMetadataFromMarkdown("# Article", TEST_HEADERS);
+
+    const calledHeaders = vi.mocked(fetch).mock.calls[0][1]?.headers as Record<string, string>;
+    expect(calledHeaders).not.toHaveProperty("x-audience-id");
+  });
 });
