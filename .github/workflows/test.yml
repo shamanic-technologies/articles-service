@@ -20,6 +20,36 @@ jobs:
 
   test-integration:
     runs-on: ubuntu-latest
+
+    # A throwaway Postgres, one per run, inside the runner.
+    #
+    # This used to be a hosted branch cut per pull request against a managed
+    # database provider. That provider is gone — the fleet moved to a
+    # self-hosted Postgres — so the step began failing with a 404 before a
+    # single test ran, and nothing could merge. A service container gives the
+    # same guarantee the branch was there for (a database nothing else points
+    # at, discarded when the job ends) with no external service, no API key,
+    # and no delete step that can leave anything behind.
+    #
+    # It also closes a hole that setup had: the branch was cut only on
+    # `pull_request`, so a push to main/staging ran the suite against the
+    # long-lived ARTICLES_SERVICE_DATABASE_URL_DEV database and reconciled its
+    # schema with `push --force`. Every event now gets its own container.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: articles_service_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,25 +57,45 @@ jobs:
           node-version: 20
       - run: npm ci
 
-      - name: Create Neon branch for PR
-        if: github.event_name == 'pull_request'
-        id: neon
-        uses: neondatabase/create-branch-action@v6
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch_name: pr-${{ github.event.number }}
-          api_key: ${{ secrets.NEON_API_KEY }}
-
+      # No sslmode in the DSN: `src/db/index.ts` hands the string straight to
+      # postgres.js, which does not negotiate TLS unless told to, and the
+      # container serves plaintext.
       - name: Set database URL
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "DB_URL=${{ steps.neon.outputs.db_url_pooled }}" >> "$GITHUB_ENV"
-          else
-            echo "DB_URL=${{ secrets.ARTICLES_SERVICE_DATABASE_URL_DEV }}" >> "$GITHUB_ENV"
-          fi
+        run: echo "DB_URL=postgresql://postgres:postgres@127.0.0.1:5432/articles_service_test" >> "$GITHUB_ENV"
 
-      - name: Push schema
-        run: npx drizzle-kit push --force
+      # The database starts EMPTY, so the schema is built from `schema.ts` — the
+      # step that was always the authority on drift, and now the only source the
+      # suite sees.
+      #
+      # `drizzle-kit push` prints a failed statement, abandons every statement
+      # after it, and EXITS 0 — verified against this repo: a push blocked on one
+      # object created 3 of the 4 tables and still returned success. On a branch
+      # forked from production that was invisible, because there was nothing left
+      # to create; from empty it would hand the suite a half-built schema and
+      # fail somewhere unrelated. Two guards, because the error text is a driver
+      # stack trace and not a stable contract:
+      #   1. fail on any error the push prints;
+      #   2. re-run it and require "No changes detected" — a complete schema is
+      #      one that leaves drizzle nothing to do.
+      - name: Build schema from schema.ts
+        run: |
+          set -o pipefail
+          npx drizzle-kit push --force 2>&1 | tee /tmp/drizzle-push.log
+          if grep -qiE '(^error:|PostgresError|severity: .ERROR.)' /tmp/drizzle-push.log; then
+            echo "::error::drizzle-kit push reported an error (and exited 0) — the schema is incomplete."
+            exit 1
+          fi
+        env:
+          ARTICLES_SERVICE_DATABASE_URL: ${{ env.DB_URL }}
+
+      - name: Verify the schema is complete
+        run: |
+          set -o pipefail
+          npx drizzle-kit push --force 2>&1 | tee /tmp/drizzle-verify.log
+          if ! grep -q 'No changes detected' /tmp/drizzle-verify.log; then
+            echo "::error::drizzle-kit still has work to do against the database it just built — the first push did not apply everything."
+            exit 1
+          fi
         env:
           ARTICLES_SERVICE_DATABASE_URL: ${{ env.DB_URL }}
 
@@ -54,3 +104,60 @@ jobs:
         env:
           ARTICLES_SERVICE_DATABASE_URL: ${{ env.DB_URL }}
           ARTICLES_SERVICE_API_KEY: test-api-key
+
+      # No cleanup step: the container dies with the job. The hosted branch this
+      # replaced needed one, and that cleanup workflow outlived the project it
+      # deleted branches on.
+
+  # The migration files are what `migrate.yml` runs against production and what
+  # the boot migrator runs on every deploy, but nothing ever exercised them —
+  # the suite has always built its schema from `schema.ts` instead. A branch
+  # forked from production could not have exercised them either: it already had
+  # every table, so a replay would have been a no-op.
+  #
+  # An empty container can. This job replays the journal from nothing and then
+  # requires that `schema.ts` has nothing left to add to the result — which is
+  # the lockstep between the two that CLAUDE.md asks for and no check enforced.
+  test-migrations:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: articles_service_migrations
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+
+      - name: Set database URL
+        run: echo "DB_URL=postgresql://postgres:postgres@127.0.0.1:5432/articles_service_migrations" >> "$GITHUB_ENV"
+
+      - name: Replay the migration journal from empty
+        run: npx drizzle-kit migrate
+        env:
+          ARTICLES_SERVICE_DATABASE_URL: ${{ env.DB_URL }}
+
+      - name: Require the journal and schema.ts to agree
+        run: |
+          set -o pipefail
+          npx drizzle-kit push --force 2>&1 | tee /tmp/drizzle-drift.log
+          if ! grep -q 'No changes detected' /tmp/drizzle-drift.log; then
+            echo "::error::The migration journal does not build the schema that src/db/schema.ts describes. Add the missing migration, or correct schema.ts — they ship together."
+            exit 1
+          fi
+        env:
+          ARTICLES_SERVICE_DATABASE_URL: ${{ env.DB_URL }}

@@ -1,12 +1,14 @@
 # articles-service — repo conventions
 
-Express + TypeScript (strict) + Zod + Drizzle (postgres.js driver) on Neon. Deployed on Railway.
+Express + TypeScript (strict) + Zod + Drizzle (postgres.js driver) on the fleet's self-hosted Postgres. Deployed on Railway.
 
 ## Testing
 
 - `npm run test:unit` → `tests/unit/` — pure, no DB. Run these locally.
 - `npm run test:integration` → `tests/integration/` — needs a real Postgres with the articles schema.
-- **Integration tests are effectively CI-only.** CI (`.github/workflows/test.yml`) spins up a per-PR Neon branch, runs `drizzle-kit push --force` from `src/db/schema.ts` (NOT the migration files), then runs the suite. So integration green depends on `schema.ts` being correct.
+- **Integration tests are effectively CI-only.** CI (`.github/workflows/test.yml`) starts a `postgres:16` service container per run — its own empty database, gone when the job ends — runs `drizzle-kit push --force` from `src/db/schema.ts` (NOT the migration files), then runs the suite. So integration green depends on `schema.ts` being correct. This replaced a per-PR branch on a managed provider that no longer exists; there is no external database dependency, no API key, and no cleanup step.
+- **`drizzle-kit push` exits 0 on a failed statement.** It prints the error, abandons everything after it, and returns success — verified here: a push blocked on one object created 3 of 4 tables and still exited 0. The push step therefore fails the job on any error text, then re-runs push and requires `No changes detected`. Do not remove either guard; a half-built schema otherwise fails the suite somewhere unrelated.
+- **`test-migrations` is a separate job and a real gate.** It replays the journal onto an empty container with `drizzle-kit migrate`, then requires `drizzle-kit push` to report `No changes detected` against the result. That is the migration-SQL ↔ `schema.ts` lockstep this file asks for, enforced. A new migration that does not reproduce `schema.ts` fails the PR.
 - ⚠️ A fresh Conductor workspace has **no** `ARTICLES_SERVICE_DATABASE_URL` and no `.env`. `tests/setup.ts` falls back to `postgresql://test:test@localhost/test` — which in this dev box is **another service's local DB** (e.g. billing), NOT articles. Do NOT point vitest or `drizzle-kit migrate/push` at it; you'll either fail on missing relations or pollute a sibling's DB. Let CI validate integration instead of forcing it locally.
 
 ## Migrations
