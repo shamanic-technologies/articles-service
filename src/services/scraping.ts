@@ -3,6 +3,7 @@ import { db } from "../db/index.js";
 import { articles } from "../db/schema.js";
 import type { IdentityHeaders } from "./google.js";
 import { extractMetadataFromMarkdown, type ExtractedAuthor } from "./llm.js";
+import { errorMessage } from "../lib/db-error.js";
 
 export interface ExtractResultSuccess {
   url: string;
@@ -205,7 +206,7 @@ export async function extractArticles(
         results.push({
           url,
           success: false,
-          error: err instanceof Error ? err.message : "LLM extraction failed",
+          error: errorMessage(err, "LLM extraction failed"),
         });
       }
     }),
