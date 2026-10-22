@@ -48,6 +48,7 @@ describe("POST /v1/discover/outlet-articles", () => {
         authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-20T00:00:00Z",
         markdownLength: 5200,
+        wordCount: 850,
       },
       {
         url: "https://techcrunch.com/2025/article-2",
@@ -55,6 +56,7 @@ describe("POST /v1/discover/outlet-articles", () => {
         authors: [{ type: "person", firstName: "John", lastName: "Doe" }, { type: "person", firstName: "Jane", lastName: "Smith" }],
         publishedAt: "2025-03-18T00:00:00Z",
         markdownLength: 3200,
+        wordCount: 520,
       },
     ]);
 
@@ -127,6 +129,7 @@ describe("POST /v1/discover/outlet-articles", () => {
         authors: [{ type: "person", firstName: "Alice", lastName: "Johnson" }],
         publishedAt: "2025-03-20T00:00:00Z",
         markdownLength: 2800,
+        wordCount: 460,
       },
       {
         url: "https://example.com/bad",
@@ -241,6 +244,7 @@ describe("POST /v1/discover/journalist-publications", () => {
         authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-15T00:00:00Z",
         markdownLength: 7500,
+        wordCount: 1230,
       },
       {
         url: "https://nytimes.com/ai-revolution",
@@ -248,6 +252,7 @@ describe("POST /v1/discover/journalist-publications", () => {
         authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-10T00:00:00Z",
         markdownLength: 12000,
+        wordCount: 1980,
       },
     ]);
 
@@ -411,6 +416,7 @@ describe("POST /v1/discover/journalist-publications", () => {
         authors: [{ type: "person", firstName: "Sarah", lastName: "Perez" }],
         publishedAt: "2025-03-20T00:00:00Z",
         markdownLength: 4100,
+        wordCount: 670,
       },
     ]);
 

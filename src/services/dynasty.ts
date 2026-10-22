@@ -19,18 +19,19 @@ export interface DynastyEntry {
 
 function buildReqHeaders(
   apiKey: string,
-  headers?: { orgId?: string; userId?: string; runId?: string },
+  headers?: { orgId?: string; userId?: string; runId?: string; audienceId?: string },
 ): Record<string, string> {
   const h: Record<string, string> = { "X-API-Key": apiKey };
   if (headers?.orgId) h["x-org-id"] = headers.orgId;
   if (headers?.userId) h["x-user-id"] = headers.userId;
   if (headers?.runId) h["x-run-id"] = headers.runId;
+  if (headers?.audienceId) h["x-audience-id"] = headers.audienceId;
   return h;
 }
 
 export async function resolveWorkflowDynastySlugs(
   dynastySlug: string,
-  headers?: { orgId?: string; userId?: string; runId?: string },
+  headers?: { orgId?: string; userId?: string; runId?: string; audienceId?: string },
 ): Promise<string[]> {
   const { url: baseUrl, apiKey } = getWorkflowConfig();
   if (!baseUrl || !apiKey) {
@@ -51,7 +52,7 @@ export async function resolveWorkflowDynastySlugs(
 
 export async function resolveFeatureDynastySlugs(
   dynastySlug: string,
-  headers?: { orgId?: string; userId?: string; runId?: string },
+  headers?: { orgId?: string; userId?: string; runId?: string; audienceId?: string },
 ): Promise<string[]> {
   const { url: baseUrl, apiKey } = getFeaturesConfig();
   if (!baseUrl || !apiKey) {
@@ -71,7 +72,7 @@ export async function resolveFeatureDynastySlugs(
 }
 
 export async function fetchAllWorkflowDynasties(
-  headers?: { orgId?: string; userId?: string; runId?: string },
+  headers?: { orgId?: string; userId?: string; runId?: string; audienceId?: string },
 ): Promise<DynastyEntry[]> {
   const { url: baseUrl, apiKey } = getWorkflowConfig();
   if (!baseUrl || !apiKey) {
@@ -96,7 +97,7 @@ export async function fetchAllWorkflowDynasties(
 }
 
 export async function fetchAllFeatureDynasties(
-  headers?: { orgId?: string; userId?: string; runId?: string },
+  headers?: { orgId?: string; userId?: string; runId?: string; audienceId?: string },
 ): Promise<DynastyEntry[]> {
   const { url: baseUrl, apiKey } = getFeaturesConfig();
   if (!baseUrl || !apiKey) {

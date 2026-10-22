@@ -102,6 +102,40 @@ describe("traceEvent", () => {
     expect(headers["x-feature-slug"]).toBe("feat-slug");
   });
 
+  it("should forward x-audience-id when present", async () => {
+    process.env.RUNS_SERVICE_URL = "https://runs.test";
+    process.env.RUNS_SERVICE_API_KEY = "test-key";
+
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", mockFetch);
+
+    await traceEvent(
+      "run-123",
+      { service: "articles-service", event: "test" },
+      { "x-org-id": "org-1", "x-audience-id": "aud-1" }
+    );
+
+    const headers = mockFetch.mock.calls[0][1].headers;
+    expect(headers["x-audience-id"]).toBe("aud-1");
+  });
+
+  it("should omit x-audience-id when absent", async () => {
+    process.env.RUNS_SERVICE_URL = "https://runs.test";
+    process.env.RUNS_SERVICE_API_KEY = "test-key";
+
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", mockFetch);
+
+    await traceEvent(
+      "run-123",
+      { service: "articles-service", event: "test" },
+      { "x-org-id": "org-1" }
+    );
+
+    const headers = mockFetch.mock.calls[0][1].headers;
+    expect(headers).not.toHaveProperty("x-audience-id");
+  });
+
   it("should omit undefined identity headers", async () => {
     process.env.RUNS_SERVICE_URL = "https://runs.test";
     process.env.RUNS_SERVICE_API_KEY = "test-key";

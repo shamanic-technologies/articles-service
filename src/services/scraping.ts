@@ -10,6 +10,17 @@ export interface ExtractResultSuccess {
   authors: ExtractedAuthor[];
   publishedAt: string | null;
   markdownLength: number;
+  wordCount: number;
+}
+
+/**
+ * Normalize a raw published-date string into a typed Date for the
+ * `articles.published_at` timestamptz column. Returns null when absent/unparseable.
+ */
+export function toPublishedTimestamp(raw: string | null | undefined): Date | null {
+  if (!raw) return null;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 interface ExtractResultError {
@@ -53,6 +64,7 @@ async function scrapeMarkdown(
       ...(headers.featureSlug ? { "x-feature-slug": headers.featureSlug } : {}),
       ...(headers.brandId ? { "x-brand-id": headers.brandId } : {}),
       ...(headers.campaignId ? { "x-campaign-id": headers.campaignId } : {}),
+      ...(headers.audienceId ? { "x-audience-id": headers.audienceId } : {}),
     },
     body: JSON.stringify({
       url,
@@ -113,6 +125,7 @@ export async function extractArticles(
       author: articles.author,
       articlePublished: articles.articlePublished,
       markdownLength: articles.markdownLength,
+      wordCount: articles.wordCount,
     })
     .from(articles)
     .where(
@@ -137,6 +150,7 @@ export async function extractArticles(
       authors: cached.author ? parseStoredAuthors(cached.author) : [],
       publishedAt: cached.articlePublished ?? null,
       markdownLength: cached.markdownLength ?? 0,
+      wordCount: cached.wordCount ?? 0,
     });
   }
 
@@ -184,6 +198,7 @@ export async function extractArticles(
           authors: metadata.authors,
           publishedAt: metadata.publishedAt,
           markdownLength: markdown.length,
+          wordCount: markdown.split(/\s+/).filter(Boolean).length,
         });
       } catch (err) {
         console.error(`[Articles Service] LLM extraction failed for ${url}:`, err);

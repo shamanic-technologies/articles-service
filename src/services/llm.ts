@@ -78,6 +78,7 @@ export async function extractMetadataFromMarkdown(
       ...(headers.featureSlug ? { "x-feature-slug": headers.featureSlug } : {}),
       ...(headers.brandId ? { "x-brand-id": headers.brandId } : {}),
       ...(headers.campaignId ? { "x-campaign-id": headers.campaignId } : {}),
+      ...(headers.audienceId ? { "x-audience-id": headers.audienceId } : {}),
     },
     body: JSON.stringify({
       message: `Extract author names and publication date from this article:\n\n${truncated}`,

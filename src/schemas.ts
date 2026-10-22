@@ -48,6 +48,8 @@ export const ArticleSchema = z
     twitterDescription: z.string().nullable().openapi({ description: "Twitter/X card description meta tag" }),
     articleModified: z.string().nullable().openapi({ description: "Last modified date from article metadata" }),
     markdownLength: z.number().int().nullable().openapi({ description: "Character count of the raw markdown fetched from the scraping service (before LLM truncation)", example: 12500 }),
+    wordCount: z.number().int().nullable().openapi({ description: "Word count of the article body (proxy for reading length; reading_time ≈ wordCount/200)", example: 850 }),
+    publishedAt: z.string().datetime().nullable().openapi({ description: "Normalized publication date (typed timestamp; sortable). Raw string lives in articlePublished.", example: "2025-03-15T10:00:00Z" }),
     createdAt: z.string().datetime().openapi({ description: "When this article record was first created" }),
     updatedAt: z.string().datetime().openapi({ description: "When this article record was last updated" }),
   })
@@ -199,6 +201,71 @@ export const DiscoveriesQuerySchema = z
     offset: z.coerce.number().int().min(0).optional().openapi({ description: "Number of results to skip for pagination" }),
   })
   .openapi("DiscoveriesQuery");
+
+// --- Mention schemas ---
+// A journalist published an article mentioning a brand after we did outreach (the "win").
+
+export const PlacementTypeEnum = z
+  .enum(["organic", "sponsored"])
+  .openapi("PlacementType");
+
+export const ArticleMentionSchema = z
+  .object({
+    id: z.string().uuid().openapi({ description: "Unique mention record identifier" }),
+    articleId: z.string().uuid().openapi({ description: "ID of the article that mentions the brand" }),
+    orgId: z.string().uuid().openapi({ description: "Organization that owns this mention" }),
+    brandIds: z.array(z.string().uuid()).openapi({ description: "Brands mentioned in the article" }),
+    outletId: z.string().uuid().openapi({ description: "Outlet that published the article (ref outlets-service)" }),
+    journalistId: z.string().uuid().openapi({ description: "Journalist who wrote the article (ref journalists-service)" }),
+    campaignId: z.string().uuid().openapi({ description: "Campaign this mention is attributed to" }),
+    pitchId: z.string().uuid().nullable().openapi({ description: "Outreach pitch this mention converted from (ref journalists-quotes-service); null = organic/untracked" }),
+    hasMention: z.boolean().openapi({ description: "Brand is named in the article body" }),
+    hasQuote: z.boolean().openapi({ description: "Article contains a direct citation/quote attributed to us" }),
+    hasLink: z.boolean().openapi({ description: "Article links to our site" }),
+    linkDofollow: z.boolean().nullable().openapi({ description: "At least one dofollow link to our site; null when hasLink is false" }),
+    placementType: PlacementTypeEnum.openapi({ description: "How the article is labeled" }),
+    isPaid: z.boolean().openapi({ description: "Whether the placement was paid for" }),
+    costUsdCents: z.number().int().nullable().openapi({ description: "Amount spent on the placement in USD cents; null when not paid", example: 50000 }),
+    source: z.string().openapi({ description: "How this mention was recorded: 'manual' (dashboard) or 'auto'", example: "manual" }),
+    createdBy: z.string().uuid().nullable().openapi({ description: "User who recorded the mention (x-user-id)" }),
+    createdAt: z.string().datetime().openapi({ description: "When this mention was recorded" }),
+  })
+  .openapi("ArticleMention");
+
+export const CreateMentionBodySchema = z
+  .object({
+    articleId: z.string().uuid().optional().openapi({ description: "ID of an already-indexed article. Provide this OR articleUrl." }),
+    articleUrl: z.string().url().optional().openapi({ description: "URL of the article. If not yet indexed, it is scraped + extracted (author, published date, word count) and upserted. Provide this OR articleId.", example: "https://techcrunch.com/2025/03/15/brand-feature" }),
+    outletId: z.string().uuid().openapi({ description: "Outlet that published the article (ref outlets-service)" }),
+    journalistId: z.string().uuid().openapi({ description: "Journalist who wrote the article (ref journalists-service)" }),
+    pitchId: z.string().uuid().optional().openapi({ description: "Outreach pitch this converted from (ref journalists-quotes-service); omit for organic/untracked" }),
+    hasMention: z.boolean().openapi({ description: "Brand is named in the article body" }),
+    hasQuote: z.boolean().openapi({ description: "Article contains a direct citation/quote attributed to us" }),
+    hasLink: z.boolean().openapi({ description: "Article links to our site" }),
+    linkDofollow: z.boolean().optional().openapi({ description: "At least one dofollow link to our site. Required only when hasLink is true; must be omitted when hasLink is false." }),
+    placementType: PlacementTypeEnum.openapi({ description: "How the article is labeled" }),
+    isPaid: z.boolean().openapi({ description: "Whether the placement was paid for" }),
+    costUsdCents: z.number().int().nonnegative().optional().openapi({ description: "Amount spent in USD cents. Required when isPaid is true; must be omitted when isPaid is false.", example: 50000 }),
+  })
+  .openapi("CreateMentionBody");
+
+export const MentionsQuerySchema = z
+  .object({
+    brandId: z.string().uuid().optional().openapi({ description: "Filter by brand ID" }),
+    campaignId: z.string().uuid().optional().openapi({ description: "Filter by campaign ID" }),
+    outletId: z.string().uuid().optional().openapi({ description: "Filter by outlet ID" }),
+    journalistId: z.string().uuid().optional().openapi({ description: "Filter by journalist ID" }),
+    limit: z.coerce.number().int().min(1).max(100).optional().openapi({ description: "Max results to return (default 20, max 100)" }),
+    offset: z.coerce.number().int().min(0).optional().openapi({ description: "Number of results to skip for pagination" }),
+  })
+  .openapi("MentionsQuery");
+
+export const MentionWithArticleSchema = z
+  .object({
+    mention: ArticleMentionSchema,
+    article: ArticleSchema,
+  })
+  .openapi("MentionWithArticle");
 
 // --- Stats schemas ---
 
@@ -519,6 +586,38 @@ registry.registerPath({
     200: { description: "Journalist publications with extracted authors", content: { "application/json": { schema: z.object({ articles: z.array(DiscoveredArticleSchema) }) } } },
     400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
     502: { description: "Upstream service error", content: { "application/json": { schema: ErrorResponseSchema } } },
+  },
+});
+
+// Mentions (earned-media placements)
+
+registry.registerPath({
+  method: "post",
+  path: "/v1/mentions",
+  operationId: "createMention",
+  summary: "Record a journalist mention (earned-media placement) after outreach",
+  description: "Logs that a journalist published an article mentioning a brand, with the placement's characteristics (mention/quote/link/dofollow, organic vs sponsored, paid vs free + spend). org/brand/campaign come from identity headers (x-org-id, x-brand-id, x-campaign-id required). Provide either articleId (already indexed) or articleUrl (scraped + extracted + upserted). Returns the created mention record.",
+  request: { headers: IdentityHeadersSchema, body: { content: { "application/json": { schema: CreateMentionBodySchema } } } },
+  responses: {
+    200: { description: "Mention recorded", content: { "application/json": { schema: ArticleMentionSchema } } },
+    400: { description: "Invalid request", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
+    401: { description: "Unauthorized", content: { "application/json": { schema: ErrorResponseSchema } } },
+    404: { description: "Article not found (when articleId is given but does not exist)", content: { "application/json": { schema: ErrorResponseSchema } } },
+    500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/v1/mentions",
+  operationId: "listMentions",
+  summary: "List recorded journalist mentions, joined with article data",
+  description: "Lists mentions for the org (from x-org-id), optionally filtered by brandId, campaignId, outletId, journalistId. Each row includes the joined article (title, author, published date, word count).",
+  request: { headers: IdentityHeadersSchema, query: MentionsQuerySchema },
+  responses: {
+    200: { description: "Mentions with joined article data", content: { "application/json": { schema: z.object({ mentions: z.array(MentionWithArticleSchema) }) } } },
+    400: { description: "Invalid query parameters", content: { "application/json": { schema: ValidationErrorResponseSchema } } },
+    500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } },
   },
 });
 

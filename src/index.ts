@@ -9,6 +9,7 @@ import articlesRoutes from "./routes/articles.js";
 import topicsRoutes from "./routes/topics.js";
 import discoveriesRoutes from "./routes/discoveries.js";
 import discoverRoutes from "./routes/discover.js";
+import mentionsRoutes from "./routes/mentions.js";
 import internalRoutes from "./routes/internal.js";
 import statsRoutes from "./routes/stats.js";
 import { requireIdentity } from "./middleware/identity.js";
@@ -46,6 +47,7 @@ app.use(articlesRoutes);
 app.use(topicsRoutes);
 app.use(discoveriesRoutes);
 app.use(discoverRoutes);
+app.use(mentionsRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });

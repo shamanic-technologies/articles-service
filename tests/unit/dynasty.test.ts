@@ -48,6 +48,35 @@ describe("resolveWorkflowDynastySlugs", () => {
     expect(opts.headers["x-org-id"]).toBe("org-1");
   });
 
+  it("forwards x-audience-id when present", async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      json: async () => ({ workflowSlugs: ["cold-email"] }),
+    });
+
+    await resolveWorkflowDynastySlugs("cold-email", {
+      orgId: "org-1",
+      userId: "user-1",
+      runId: "run-1",
+      audienceId: "aud-1",
+    });
+
+    const [, opts] = fetchSpy.mock.calls[0];
+    expect(opts.headers["x-audience-id"]).toBe("aud-1");
+  });
+
+  it("omits x-audience-id when absent", async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      json: async () => ({ workflowSlugs: ["cold-email"] }),
+    });
+
+    await resolveWorkflowDynastySlugs("cold-email", { orgId: "org-1" });
+
+    const [, opts] = fetchSpy.mock.calls[0];
+    expect(opts.headers).not.toHaveProperty("x-audience-id");
+  });
+
   it("returns empty array on HTTP error", async () => {
     fetchSpy.mockResolvedValue({ ok: false, status: 500 });
     const result = await resolveWorkflowDynastySlugs("cold-email");

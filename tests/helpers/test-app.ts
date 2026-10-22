@@ -8,6 +8,7 @@ import articlesRoutes from "../../src/routes/articles.js";
 import topicsRoutes from "../../src/routes/topics.js";
 import discoveriesRoutes from "../../src/routes/discoveries.js";
 import discoverRoutes from "../../src/routes/discover.js";
+import mentionsRoutes from "../../src/routes/mentions.js";
 import internalRoutes from "../../src/routes/internal.js";
 import statsRoutes from "../../src/routes/stats.js";
 import { requireIdentity } from "../../src/middleware/identity.js";
@@ -43,6 +44,7 @@ export function createTestApp() {
   app.use(topicsRoutes);
   app.use(discoveriesRoutes);
   app.use(discoverRoutes);
+  app.use(mentionsRoutes);
   app.use((_req: express.Request, res: express.Response) => {
     res.status(404).json({ error: "Not found" });
   });

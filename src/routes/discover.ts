@@ -4,7 +4,7 @@ import { db } from "../db/index.js";
 import { articles, articleDiscoveries } from "../db/schema.js";
 import { requireApiKey } from "../middleware/auth.js";
 import { searchNews, type IdentityHeaders } from "../services/google.js";
-import { extractArticles, serializeAuthors, type ExtractResultSuccess } from "../services/scraping.js";
+import { extractArticles, serializeAuthors, toPublishedTimestamp, type ExtractResultSuccess } from "../services/scraping.js";
 import {
   DiscoverOutletArticlesBodySchema,
   DiscoverJournalistPublicationsBodySchema,
@@ -22,6 +22,7 @@ function getIdentityHeaders(req: import("express").Request): IdentityHeaders {
     featureSlug: req.headers["x-feature-slug"] as string | undefined,
     brandId: req.headers["x-brand-id"] as string | undefined,
     campaignId: req.headers["x-campaign-id"] as string | undefined,
+    audienceId: req.headers["x-audience-id"] as string | undefined,
   };
 }
 
@@ -96,6 +97,8 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
         articlePublished: ext.publishedAt ?? null,
         author: ext.authors.length > 0 ? serializeAuthors(ext.authors) : null,
         markdownLength: ext.markdownLength,
+        wordCount: ext.wordCount,
+        publishedAt: toPublishedTimestamp(ext.publishedAt),
         extractedAt: new Date(),
       };
     });
@@ -112,6 +115,8 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
           articlePublished: sql`EXCLUDED.article_published`,
           author: sql`EXCLUDED.author`,
           markdownLength: sql`EXCLUDED.markdown_length`,
+          wordCount: sql`EXCLUDED.word_count`,
+          publishedAt: sql`EXCLUDED.published_at`,
           extractedAt: sql`EXCLUDED.extracted_at`,
           updatedAt: new Date(),
         },
@@ -226,6 +231,8 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
         articlePublished: ext.publishedAt ?? null,
         author: ext.authors.length > 0 ? serializeAuthors(ext.authors) : null,
         markdownLength: ext.markdownLength,
+        wordCount: ext.wordCount,
+        publishedAt: toPublishedTimestamp(ext.publishedAt),
         extractedAt: new Date(),
       };
     });
@@ -242,6 +249,8 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
           articlePublished: sql`EXCLUDED.article_published`,
           author: sql`EXCLUDED.author`,
           markdownLength: sql`EXCLUDED.markdown_length`,
+          wordCount: sql`EXCLUDED.word_count`,
+          publishedAt: sql`EXCLUDED.published_at`,
           extractedAt: sql`EXCLUDED.extracted_at`,
           updatedAt: new Date(),
         },
