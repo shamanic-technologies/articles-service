@@ -10,6 +10,7 @@ import {
   DiscoverJournalistPublicationsBodySchema,
 } from "../schemas.js";
 import { traceEvent } from "../lib/trace-event.js";
+import { errorMessage } from "../lib/db-error.js";
 
 const router = Router();
 
@@ -162,7 +163,7 @@ router.post("/v1/discover/outlet-articles", requireApiKey, async (req, res) => {
   } catch (err) {
     console.error("[Articles Service] Error discovering outlet articles:", err);
     res.status(502).json({
-      error: err instanceof Error ? err.message : "Failed to discover outlet articles",
+      error: errorMessage(err, "Failed to discover outlet articles"),
     });
   }
 });
@@ -296,7 +297,7 @@ router.post("/v1/discover/journalist-publications", requireApiKey, async (req, r
   } catch (err) {
     console.error("[Articles Service] Error discovering journalist publications:", err);
     res.status(502).json({
-      error: err instanceof Error ? err.message : "Failed to discover journalist publications",
+      error: errorMessage(err, "Failed to discover journalist publications"),
     });
   }
 });
