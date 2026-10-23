@@ -15,7 +15,7 @@ Express + TypeScript (strict) + Zod + Drizzle (postgres.js driver) on the fleet'
 
 - Hand-authored `drizzle/NNNN_<name>.sql` + a matching entry appended to `drizzle/meta/_journal.json` (`idx`, `version:"7"`, increasing `when`, `tag`). `drizzle-kit generate` is NOT used here (meta only has `0000_snapshot.json`).
 - Make every statement idempotent: `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`, FK adds wrapped in `DO $$ ... EXCEPTION WHEN duplicate_object THEN null; END $$`.
-- Applied two ways: boot `migrate()` in `src/index.ts` (skipped when `NODE_ENV=test`) AND `migrate.yml` on push to `main` (paths `drizzle/**`, `src/db/schema.ts`). Keep the SQL migration and `schema.ts` in lockstep.
+- Applied by the boot `migrate()` in `src/index.ts` on every deploy (skipped when `NODE_ENV=test`); CI's `test-migrations` job replays the journal from empty. (The old `migrate.yml` targeted the retired hosted database and was removed 2026-10-23.) Keep the SQL migration and `schema.ts` in lockstep.
 
 ## Routes & auth
 

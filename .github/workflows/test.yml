@@ -109,8 +109,7 @@ jobs:
       # replaced needed one, and that cleanup workflow outlived the project it
       # deleted branches on.
 
-  # The migration files are what `migrate.yml` runs against production and what
-  # the boot migrator runs on every deploy, but nothing ever exercised them —
+  # The migration files are what the boot migrator runs on every deploy, but nothing ever exercised them —
   # the suite has always built its schema from `schema.ts` instead. A branch
   # forked from production could not have exercised them either: it already had
   # every table, so a replay would have been a no-op.
